@@ -399,6 +399,10 @@ void crearRespuesta(struct lista2 **L) {
         scanf("%s", &nueva->Respuesta);
         printf("Ingrese la ponderación de la respuesta: ");
         scanf("%f", &nueva->Ponderacion);
+        while(nueva->Ponderacion <= 0 && nueva->Ponderacion > 1){
+            printf("(numero invalido) Ingrese la ponderación de la respuesta: ");
+            scanf("%f", &nueva->Ponderacion);
+        }
         printf("¿Es la opción elegida? (1=Sí, 0=No): ");
         scanf("%d", &nueva->Elegida);
         nueva->sgte = NULL;
@@ -428,6 +432,10 @@ void modificarRespuesta(struct lista2 *L, int respuestaId) {
             scanf("%s", &L->Respuesta);
             printf("Ingrese nueva ponderación: ");
             scanf("%f", &L->Ponderacion);
+            while(L->Ponderacion <= 0 && L->Ponderacion > 1){
+                printf("(numero invalido) Ingrese nueva ponderación: ");
+                scanf("%f", &L->Ponderacion);
+            }
             printf("¿Es la opción elegida? (1=Sí, 0=No): ");
             scanf("%d", &L->Elegida);
             printf("Respuesta modificada.\n");
