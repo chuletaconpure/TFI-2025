@@ -406,7 +406,7 @@ void crearRespuesta(struct lista2 **L) {
         printf("¿Es la opción elegida? (1=Sí, 0=No): ");
         scanf("%d", &nueva->Elegida);
         nueva->sgte = NULL;
-
+	//carga al archivo
         insertarL2(&nueva, L);
         printf("Respuesta creada con éxito.\n");
     } else {
