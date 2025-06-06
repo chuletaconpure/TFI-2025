@@ -40,6 +40,9 @@ tambien hay una opcion de marcar una encuesta de alguna forma como invalida en l
 #define BACKGROUND_RED         0x0040
 #define BACKGROUND_WHITE       0x0070
 
+//archivos
+FILE *arch_respuestas;
+
 //pila y sus funciones, pila de encuestas
 struct pila {
 	int Encuesta_id;
@@ -115,6 +118,7 @@ void crearRespuesta(struct lista2 **L);
 void mostrarRespuestasPorPregunta(struct lista2 *L, int preguntaId);
 void modificarRespuesta(struct lista2 *L, int respuestaId);
 void eliminarRespuestasDePregunta(struct lista2 **L, int preguntaId);
+void cargar_respuestas_csv(struct lista2 *L);
 
 //Desarrollo de las consignas:
 //usaremos una lista que contenga todos los datos de la encuesta a mostrar cumpliendo la consigna b,
@@ -209,6 +213,8 @@ int main(){
             }
 		}
 	}
+    //carga las respuestas en el arch_respuestas
+    cargar_respuestas_csv(L2);
     //al finalizar se liberan todas las estructuras
     while(!vaciaP(tp)){
         desapilar(&nodoP,&tp);
@@ -413,7 +419,7 @@ void crearRespuesta(struct lista2 **L) {
         printf("¿Es la opción elegida? (1=Sí, 0=No): ");
         scanf("%d", &nueva->Elegida);
         nueva->sgte = NULL;
-	//carga al archivo
+        //carga al arch_respuestas
         insertarL2(&nueva, L);
         printf("Respuesta creada con éxito.\n");
     } else {
@@ -473,6 +479,29 @@ void eliminarRespuestasDePregunta(struct lista2 **L, int preguntaId) {
         }
     }
     printf("Respuestas de la pregunta %d eliminadas.\n", preguntaId);
+}
+void cargar_respuestas_csv(struct lista2 *L) {
+    struct lista2 *aux = NULL;
+    const char *RespuestasCSV="respuestas.csv";
+    FILE *archivo = fopen(RespuestasCSV, "w");
+    if (archivo == NULL) {
+        printf("Error al abrir el archivo.\n");
+        return;
+    } else {
+        fprintf(archivo, "Respuesta_Id;Pregunta_Id;Respuesta_Nro;Respuesta;Ponderacion;Elegida\n");
+        aux = L;
+        while (aux != NULL) {
+            fprintf(archivo, "%d;%d;%d;\"%s\";%.2f;%d\n",
+	        aux->Respuesta_Id,
+	        aux->Pregunta_Id,
+	        aux->Respuesta_Nro,
+	        aux->Respuesta,
+	        aux->Ponderacion,
+	        aux->Elegida);
+            aux = aux->sgte;
+        }
+    }
+    fclose(arch_respuestas);
 }
 
 
