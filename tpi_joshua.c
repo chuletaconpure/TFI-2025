@@ -425,7 +425,7 @@ void modificarRespuesta(struct lista2 *L, int respuestaId) {
             printf("Respuesta actual: %s\n", L->Respuesta);
             printf("Ingrese nuevo texto: ");
             fflush(stdin);
-            gets(L->Respuesta);
+            scanf("%s", &L->Respuesta);
             printf("Ingrese nueva ponderación: ");
             scanf("%f", &L->Ponderacion);
             printf("¿Es la opción elegida? (1=Sí, 0=No): ");
