@@ -134,6 +134,7 @@ struct arbol{
 int main(){
     //menu principal
     //variables
+    struct pila *tp=NULL, *nodoP=NULL;
     struct lista2 *L2=NULL,*nodoL2=NULL;
     //funcion system para permitir mas caracteres y caracteres especiales
     system("chcp 65001");
@@ -208,6 +209,12 @@ int main(){
             }
 		}
 	}
+    //al finalizar se liberan todas las estructuras
+    while(!vaciaP(tp)){
+        desapilar(&nodoP,&tp);
+        free(nodoP);
+        nodoP=NULL;
+    }
     return 0;
 }
 
