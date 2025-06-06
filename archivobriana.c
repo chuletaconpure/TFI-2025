@@ -44,10 +44,13 @@ void crearRespuesta(struct lista2 **L) {
         printf("Ingrese número de la respuesta (orden): ");
         scanf("%d", &nueva->Respuesta_Nro);
         printf("Ingrese el texto de la respuesta: ");
-        fflush(stdin);
-        gets(nueva->Respuesta);
+        scanf("%s", &nueva->Respuesta);
         printf("Ingrese la ponderación de la respuesta: ");
         scanf("%f", &nueva->Ponderacion);
+        while(nueva->Ponderacion <= 0 && nueva->Ponderacion > 1){
+            printf("(numero invalido) Ingrese la ponderación de la respuesta: ");
+            scanf("%f", &nueva->Ponderacion);
+        }
         printf("¿Es la opción elegida? (1=Sí, 0=No): ");
         scanf("%d", &nueva->Elegida);
         nueva->sgte = NULL;
