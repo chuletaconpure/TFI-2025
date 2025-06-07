@@ -149,6 +149,7 @@ int main(){
     struct pEncuesta *tp=NULL, *nodoP=NULL;
     struct lRespuesta *L2=NULL,*nodoL2=NULL;
     struct lPregunta *LP=NULL, *nodoLP=NULL;
+    int id;
     //funcion system para permitir mas caracteres y caracteres especiales
     system("chcp 65001");
     colorMenu();
@@ -210,20 +211,23 @@ int main(){
 			}
 			if(select==2){
                 system("cls");
-				mostrarRespuestasPorPregunta(L2,LP,1);
+                printf("ingrese un id de preguntas para mostrar sus respuesta: ");
+                scanf("%i",&id);
+				mostrarRespuestasPorPregunta(L2,LP,id);
                 getch();
             }
             if(select==3){
                 system("cls");
-                int idRespuesta;
                 printf("ingrese un id de respuestas para modificar una respuesta: ");
-                scanf("%i",&idRespuesta);
-				modificarRespuesta(L2,idRespuesta);
+                scanf("%i",&id);
+				modificarRespuesta(L2,id);
                 getch();
 			}
             if(select==4){
                 system("cls");
-				eliminarRespuestasDePregunta(&L2,1);
+                printf("ingrese un id de preguntasa para eliminar sus respuesta: ");
+                scanf("%i",&id);
+				eliminarRespuestasDePregunta(&L2,id);
                 getch();
 			}
 			if(select==5){
@@ -232,10 +236,9 @@ int main(){
             }
             if(select==6){
                 system("cls");
-                int idPregunta;
                 printf("ingrese un id de pregunta para modificar una pregunta: ");
-                scanf("%i",&idPregunta);
-                modificarPregunta(LP,idPregunta);
+                scanf("%i",&id);
+                modificarPregunta(LP,id);
                 getch();
             }
 			if(select==7){
@@ -664,6 +667,3 @@ void cargar_respuestas_csv(struct lRespuesta *L) {
     }
     fclose(arch_respuestas);
 }
-
-
-
