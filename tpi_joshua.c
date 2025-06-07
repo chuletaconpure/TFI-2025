@@ -116,7 +116,12 @@ void letraA(){
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY);
 }
-
+//CRUD Encuestas
+void crearEncuesta(struct pEncuesta **tp);
+void mostrarEncuestas(struct pEncuesta **tp);
+int buscarUltimoIdEncuesta(struct pEncuesta **tp);
+void modificarEncuesta(struct pEncuesta **tp, int id);
+void eliminarEncuesta(struct pEncuesta **tp, int id);
 //CRUD Preguntas
 void crearPregunta(struct lPregunta **L);
 void modificarPregunta(struct lPregunta *L, int preguntaId);
@@ -128,7 +133,10 @@ void modificarRespuesta(struct lRespuesta *L, int respuestaId);
 int buscarUltimoIdRespuesta(struct lRespuesta *L);
 int buscarUltimoNumeroRespuesta(struct lRespuesta *L, int preguntaId);
 void eliminarRespuestasDePregunta(struct lRespuesta **L, int preguntaId);
+//funciones de carga en CSV
 void cargar_respuestas_csv(struct lRespuesta *L);
+void cargar_preguntas_csv(struct lPregunta *L);
+void cargar_encuestas_csv(struct pEncuesta **tp);
 
 //Desarrollo de las consignas:
 //usaremos una lista que contenga todos los datos de la encuesta a mostrar cumpliendo la consigna b,
@@ -155,7 +163,7 @@ int main(){
     colorMenu();
 	int apagado=0;
 	char w=1;
-	int select=1,tam=7;
+	int select=1,tam=11;
 	while(!apagado){
 		system("cls");
 		printf("<<<<TP integrador>>>>\n");
@@ -187,50 +195,67 @@ int main(){
 			printf("\n>> modificar pregunta");
 		}else
 			printf("\n   modificar pregunta");
-		if(select==7){
+		if(select==7) 
+            printf("\n>> eliminar encuesta"); 
+        else 
+            printf("\n   eliminar encuesta");
+        if(select==8)
+            printf("\n>> crear encuesta"); 
+        else 
+            printf("\n   crear encuesta");
+        if(select==9) 
+            printf("\n>> mostrar encuestas"); 
+        else 
+            printf("\n   mostrar encuestas");
+        if(select==10) 
+            printf("\n>> modificar encuesta"); 
+        else 
+            printf("\n   modificar encuesta");
+        if(select==11){
 			printf("\n>> salir");
 		}else
 			printf("\n   salir");
-		w=getch();
-		if(w=='w' || w==72 )
-			select--;
-		if(w=='s' || w==80)
-			select++;
+
+        w=getch();
+        if(w=='w' || w==72 )
+            select--;
+        if(w=='s' || w==80)
+            select++;
         //al presionar la tecla escape se cierra el programa
-		if(w==27)
-			apagado++;
-		if(select>tam)
-			select=1;
-		if(select<1)
-			select=tam;
+        if(w==27)
+            apagado++;
+        if(select>tam)
+            select=1;
+        if(select<1)
+            select=tam;
         //seleccion de las opciones tras presionar enter
-		if(w==13){
-			if(select==1){
+        if(w==13){
+            if(select==1){
                 system("cls");
-				crearRespuesta(&L2);
-			}
-			if(select==2){
+                crearRespuesta(&L2);
+            }
+            if(select==2){
                 system("cls");
                 printf("ingrese un id de preguntas para mostrar sus respuesta: ");
                 scanf("%i",&id);
-				mostrarRespuestasPorPregunta(L2,LP,id);
+                mostrarRespuestasPorPregunta(L2,LP,id);
                 getch();
             }
             if(select==3){
                 system("cls");
                 printf("ingrese un id de respuestas para modificar una respuesta: ");
                 scanf("%i",&id);
-				modificarRespuesta(L2,id);
+                modificarRespuesta(L2,id);
                 getch();
-			}
+            }
             if(select==4){
                 system("cls");
                 printf("ingrese un id de preguntasa para eliminar sus respuesta: ");
                 scanf("%i",&id);
-				eliminarRespuestasDePregunta(&L2,id);
+                eliminarRespuestasDePregunta(&L2,id);
                 getch();
-			}
-			if(select==5){
+            }
+            if(select==5){
                 system("cls");
                 crearPregunta(&LP);
             }
@@ -241,18 +266,54 @@ int main(){
                 modificarPregunta(LP,id);
                 getch();
             }
-			if(select==7){
-				apagado++;
+            if(select==7){
+                system("cls");
+                printf("Ingrese ID de encuesta a eliminar: ");
+                scanf("%d", &id);
+                eliminarEncuesta(&tp, id);
+                getch();
             }
-		}
+            if(select==8){
+                system("cls");
+                crearEncuesta(&tp);
+                getch();
+            }
+            if(select==9){
+                system("cls");
+                mostrarEncuestas(&tp);
+                getch();
+            }
+            if(select==10){
+                system("cls");
+                printf("Ingrese ID de encuesta a modificar: ");
+                scanf("%d", &id);
+                modificarEncuesta(&tp, id);
+                getch();
+            }
+            if(select==11){
+                apagado++;
+            }
+        }
 	}
     //carga las respuestas en el arch_respuestas
     cargar_respuestas_csv(L2);
+    cargar_preguntas_csv(LP);
+    cargar_encuestas_csv(&tp);
     //al finalizar se liberan todas las estructuras
     while(!vaciaP(tp)){
         desapilar(&nodoP,&tp);
         free(nodoP);
         nodoP=NULL;
+    }
+    while(L2 != NULL){
+        nodoL2 = L2;
+        L2 = L2->sgte;
+        free(nodoL2);
+    }
+    while(LP != NULL){
+        nodoLP = LP;
+        LP = LP->sgte;
+        free(nodoLP);
     }
     return 0;
 }
@@ -430,6 +491,132 @@ struct arbol *eliminarA(struct arbol **r){
     }
     return NULL;
 }
+//CRUD Encuestas
+void crearEncuesta(struct pEncuesta **tp) {
+    struct pEncuesta *nueva = NULL;
+    if (nuevoP(&nueva)) {
+        int c;
+        
+        // asignar ID automáticamente
+        if(*tp == NULL){
+            nueva->Encuesta_id = 1;
+        }else
+        nueva->Encuesta_id = buscarUltimoIdEncuesta(tp) + 1;    
+        while ((c = getchar()) != '\n' && c != EOF); // limpiar buffer
+        // solicitar datos de la encuesta
+        printf("Ingrese denominación de la encuesta: ");
+        fgets(nueva->Denominacion, sizeof(nueva->Denominacion), stdin);
+        nueva->Denominacion[strcspn(nueva->Denominacion, "\n")] = 0;
+
+        printf("Ingrese mes (1-12): ");
+        scanf("%d", &nueva->Encuesta_Mes);
+        printf("Ingrese año: ");
+        scanf("%d", &nueva->Anio);
+
+        nueva->Procesada = 0; // por defecto
+        nueva->sgte = NULL;
+
+        apilar(&nueva, tp);
+        printf("Encuesta creada con éxito.\n");
+    } else {
+        printf("Error al reservar memoria para la encuesta.\n");
+    }
+}
+void mostrarEncuestas(struct pEncuesta **tp) {
+    struct pEncuesta *nodo = NULL, *aux = NULL;
+    printf("=== Lista de encuestas ===\n");
+    if (*tp == NULL) {
+        printf("No hay encuestas cargadas.\n");
+        return;
+    }
+
+    while (!vaciaP(*tp)) {
+        desapilar(&nodo,tp);
+        printf("ID: %d | Denominación: %s | Fecha: %02d/%d | Procesada: %s\n",
+                nodo->Encuesta_id,
+                nodo->Denominacion,
+                nodo->Encuesta_Mes,
+                nodo->Anio,
+                nodo->Procesada ? "Sí" : "No");
+        apilar(&nodo,&aux);
+    }
+    //devolvemos la pila usando un auxiliar para mantener el orden original
+    while (!vaciaP(aux)){
+        desapilar(&nodo,&aux);
+        apilar(&nodo,tp);
+    }
+}
+int buscarUltimoIdEncuesta(struct pEncuesta **tp) {
+    int id;
+    struct pEncuesta *nodo=NULL;
+    //al ser una pila el ultimo id está en el tope de la pila
+    if (vaciaP(*tp)) {
+        printf("No hay encuestas cargadas.\n");
+        return 0; // no hay encuestas
+    }
+    desapilar(&nodo,tp);
+    id = nodo->Encuesta_id;
+    apilar(&nodo,tp);
+    return id;
+}
+void modificarEncuesta(struct pEncuesta **tp, int id) {
+    struct pEncuesta *nodo = NULL, *aux = NULL;
+    int encontrado=0;
+    while (!vaciaP(*tp)) {
+        desapilar(&nodo,tp);
+        if (nodo->Encuesta_id == id) {
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF); // limpiar buffer
+
+            printf("Denominación actual: %s\n", nodo->Denominacion);
+            printf("Ingrese nueva denominación: ");
+            fgets(nodo->Denominacion, sizeof(nodo->Denominacion), stdin);
+            nodo->Denominacion[strcspn(nodo->Denominacion, "\n")] = 0;
+
+            printf("Mes actual: %d\n", nodo->Encuesta_Mes);
+            printf("Ingrese nuevo mes: ");
+            scanf("%d", &nodo->Encuesta_Mes);
+
+            printf("Año actual: %d\n", nodo->Anio);
+            printf("Ingrese nuevo año: ");
+            scanf("%d", &nodo->Anio);
+
+            printf("Encuesta modificada.\n");
+            encontrado++;
+        }
+        apilar(&nodo,&aux);
+    }
+    while (!vaciaP(aux)){
+        desapilar(&nodo,&aux);
+        apilar(&nodo,tp);
+    }
+    printf("Encuesta con ID %d no encontrada.\n", id);
+}
+void eliminarEncuesta(struct pEncuesta **tp, int id) {
+    struct pEncuesta *actual = *tp;
+    struct pEncuesta *anterior = NULL;
+    if (actual == NULL) {
+        printf("No hay encuestas para eliminar.\n");
+        return;
+    }
+    while (actual != NULL) {
+        if (actual->Encuesta_id == id) {
+            if (anterior == NULL) {
+                *tp = actual->sgte;
+            } else {
+                anterior->sgte = actual->sgte;
+            }
+            free(actual);
+            printf("Encuesta eliminada.\n");
+            return;
+        }
+        anterior = actual;
+        actual = actual->sgte;
+    }
+
+    printf("Encuesta con ID %d no encontrada.\n", id);
+}
+
 //CRUD Preguntas
 void crearPregunta(struct lPregunta **L) {
     struct lPregunta *nueva = NULL;
@@ -466,9 +653,6 @@ void crearPregunta(struct lPregunta **L) {
         printf("Error al reservar memoria para la pregunta.\n");
     }
 }
-
-
-
 void modificarPregunta(struct lPregunta *L, int preguntaId) {
     while (L != NULL) {
         if (L->Pregunta_Id == preguntaId) {
@@ -587,11 +771,14 @@ void modificarRespuesta(struct lRespuesta *L, int respuestaId) {
         if (L->Respuesta_Id == respuestaId) {
             printf("Respuesta actual: %s\n", L->Respuesta);
             printf("Ingrese nuevo texto: ");
-            fflush(stdin);
-            scanf("%s", &L->Respuesta);
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+
+            fgets(L->Respuesta, sizeof(L->Respuesta), stdin);
+            L->Respuesta[strcspn(L->Respuesta, "\n")] = 0;
             printf("Ingrese nueva ponderación: ");
             scanf("%f", &L->Ponderacion);
-            while(L->Ponderacion <= 0 && L->Ponderacion > 1){
+            while(L->Ponderacion <= 0 || L->Ponderacion > 1){
                 printf("(numero invalido) Ingrese nueva ponderación: ");
                 scanf("%f", &L->Ponderacion);
             }
@@ -605,6 +792,10 @@ void modificarRespuesta(struct lRespuesta *L, int respuestaId) {
     printf("Respuesta con ID %d no encontrada.\n", respuestaId);
 }
 int buscarUltimoIdRespuesta(struct lRespuesta *L) {
+    if (L == NULL) {
+        printf("No hay respuestas registradas.\n");
+        return 0; // No hay respuestas
+    }
     if (L->sgte == NULL) {
         return L->Respuesta_Id;
     }
@@ -643,6 +834,7 @@ void eliminarRespuestasDePregunta(struct lRespuesta **L, int preguntaId) {
     }
     printf("Respuestas de la pregunta %d eliminadas.\n", preguntaId);
 }
+//funciones de carga en CSV
 void cargar_respuestas_csv(struct lRespuesta *L) {
     struct lRespuesta *aux = NULL;
     const char *RespuestasCSV="respuestas.csv";
@@ -665,5 +857,54 @@ void cargar_respuestas_csv(struct lRespuesta *L) {
             aux = aux->sgte;
         }
     }
-    fclose(arch_respuestas);
+    fclose(archivo);
+}
+void cargar_preguntas_csv(struct lPregunta *L) {
+    struct lPregunta *aux = NULL;
+    const char *PreguntasCSV="preguntas.csv";
+    FILE *archivo = fopen(PreguntasCSV, "w");
+    if (archivo == NULL) {
+        printf("Error al abrir el archivo.\n");
+        return;
+    } else {
+        //esta es la forma en la que se guardan los datos en el archivo
+        //fprintf(archivo, "Encuesta_Id;Pregunta_Id;Pregunta;Ponderacion\n");
+        aux = L;
+        while (aux != NULL) {
+            fprintf(archivo, "%d;%d;\"%s\";%.2f\n",
+            aux->Encuesta_Id,
+            aux->Pregunta_Id,
+            aux->Pregunta,
+            aux->Ponderacion);
+            aux = aux->sgte;
+        }
+    }
+    fclose(archivo);
+}
+void cargar_encuestas_csv(struct pEncuesta **tp) {
+    struct pEncuesta *nodo = NULL, *aux = NULL;
+    const char *EncuestasCSV = "encuestas.csv";
+    FILE *archivo = fopen(EncuestasCSV, "w");
+    if (archivo == NULL) {
+        printf("Error al abrir el archivo.\n");
+        return;
+    } else {
+        //fprintf(archivo, "Encuesta_id;Denominacion;Encuesta_Mes;Anio;Procesada\n");
+        while (!vaciaP(*tp)) {
+            desapilar(&nodo, tp);
+            fprintf(archivo, "%d;\"%s\";%d;%d;%d\n",
+                nodo->Encuesta_id,
+                nodo->Denominacion,
+                nodo->Encuesta_Mes,
+                nodo->Anio,
+                nodo->Procesada);
+            apilar(&nodo, &aux);
+        }
+        // Restaurar la pila original
+        while (!vaciaP(aux)) {
+            desapilar(&nodo, &aux);
+            apilar(&nodo, tp);
+        }
+    }
+    fclose(archivo);
 }
