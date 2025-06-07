@@ -28,6 +28,7 @@ si decide borrar una respuestase borran todas las respuestas de esa pregunta y s
 tambien hay una opcion de marcar una encuesta de alguna forma como invalida en lugar de borrar todos sus datos (no me gusta esa forma tt: joshua)
 */
 
+
 //valores hexagecimales que representan colores usados por windows.h
 #define FOREGROUND_BLACK       0x0000
 #define FOREGROUND_BLUE        0x0001
@@ -44,45 +45,48 @@ tambien hay una opcion de marcar una encuesta de alguna forma como invalida en l
 FILE *arch_respuestas;
 
 //pila y sus funciones, pila de encuestas
-struct pila {
+struct pEncuesta{
 	int Encuesta_id;
     char Denominacion[50];
     int Encuesta_Mes;
     int Anio;
     int Procesada;
-	struct pila *sgte;
+	struct pEncuesta *sgte;
 };
-void apilar(struct pila **, struct pila **);
-void desapilar(struct pila **, struct pila **);
-int vaciaP(struct pila *);
-int nuevoP(struct pila **nuevo);
-void mostrarP(struct pila **tope);
+
+void apilar(struct pEncuesta **, struct pEncuesta **);
+void desapilar(struct pEncuesta **, struct pEncuesta **);
+int vaciaP(struct pEncuesta *);
+int nuevoP(struct pEncuesta **nuevo);
+void mostrarP(struct pEncuesta **tope);
 
 //lista1 y sus funciones, lista de preguntas
-struct lista1{
+struct lPregunta{
     int Encuesta_Id;
     int Pregunta_Id;
     char Pregunta[100];
     float Ponderacion;
-    struct lista1 *sgte;
+    struct lPregunta *sgte;
 };
-int nuevoL1(struct lista1 **nodo);
-struct lista1 *insertarL1(struct lista1 **nodo, struct lista1 **L);
-struct lista1 *mostrarListaL1(struct lista1 **L);
+
+int nuevoLPregunta(struct lPregunta **nodo);
+struct lPregunta *insertarLPregunta(struct lPregunta **nodo, struct lPregunta **L);
+struct lPregunta *mostrarListaPregunta(struct lPregunta **L);
+
 
 //lista2 y sus funciones, lista de respuestas
-struct lista2{
+struct lRespuesta{
     int Respuesta_Id;
     int Pregunta_Id;
     int Respuesta_Nro;
     char Respuesta [50];
     float Ponderacion;
     int Elegida;
-    struct lista2 *sgte;
+    struct lRespuesta *sgte;
 };
-int nuevoL2(struct lista2 **nodo);
-struct lista2 *insertarL2(struct lista2 **nodo, struct lista2 **L);
-struct lista2 *mostrarListaL2(struct lista2 **L);
+int nuevoLRespuesta(struct lRespuesta **nodo);
+struct lRespuesta *insertarLRespuesta(struct lRespuesta **nodo, struct lRespuesta **L);
+struct lRespuesta *mostrarListaRespuesta(struct lRespuesta **L);
 
 //funciones arbol
 struct arbol *insertarA(struct arbol **A, struct arbol **nodo);
@@ -113,12 +117,18 @@ void letraA(){
     SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY);
 }
 
+//CRUD Preguntas
+void crearPregunta(struct lPregunta **L);
+void modificarPregunta(struct lPregunta *L, int preguntaId);
+int buscarUltimoIdPregunta(struct lPregunta *L);
 //CRUD respuestas
-void crearRespuesta(struct lista2 **L);
-void mostrarRespuestasPorPregunta(struct lista2 *L, int preguntaId);
-void modificarRespuesta(struct lista2 *L, int respuestaId);
-void eliminarRespuestasDePregunta(struct lista2 **L, int preguntaId);
-void cargar_respuestas_csv(struct lista2 *L);
+void crearRespuesta(struct lRespuesta **L);
+void mostrarRespuestasPorPregunta(struct lRespuesta *respuestas, struct lPregunta *preguntas, int preguntaId);
+void modificarRespuesta(struct lRespuesta *L, int respuestaId);
+int buscarUltimoIdRespuesta(struct lRespuesta *L);
+int buscarUltimoNumeroRespuesta(struct lRespuesta *L, int preguntaId);
+void eliminarRespuestasDePregunta(struct lRespuesta **L, int preguntaId);
+void cargar_respuestas_csv(struct lRespuesta *L);
 
 //Desarrollo de las consignas:
 //usaremos una lista que contenga todos los datos de la encuesta a mostrar cumpliendo la consigna b,
@@ -126,26 +136,25 @@ void cargar_respuestas_csv(struct lista2 *L);
 //durante el proceso de carga podremos calcular la ponderacion de todas las respuestas para calcular la ponderacion total de la encuesta
 struct arbol{
     int Encuesta_Id;
-    struct lista1 *L_Preguntas;
-    struct lista2 *L_Respuestas;
+    struct lPregunta *L_Preguntas;
+    struct lRespuesta *L_Respuestas;
     float Ponderacion_total;
     struct arbol *der;
     struct arbol *izq;
 };
 
-
-
 int main(){
     //menu principal
     //variables
-    struct pila *tp=NULL, *nodoP=NULL;
-    struct lista2 *L2=NULL,*nodoL2=NULL;
+    struct pEncuesta *tp=NULL, *nodoP=NULL;
+    struct lRespuesta *L2=NULL,*nodoL2=NULL;
+    struct lPregunta *LP=NULL, *nodoLP=NULL;
     //funcion system para permitir mas caracteres y caracteres especiales
     system("chcp 65001");
     colorMenu();
 	int apagado=0;
 	char w=1;
-	int select=1,tam=5;
+	int select=1,tam=7;
 	while(!apagado){
 		system("cls");
 		printf("<<<<TP integrador>>>>\n");
@@ -170,6 +179,14 @@ int main(){
 		}else
 			printf("\n   eliminar respuestas de una pregunta");
 		if(select==5){
+			printf("\n>> crear pregunta");
+		}else
+			printf("\n   crear pregunta");
+        if(select==6){
+			printf("\n>> modificar pregunta");
+		}else
+			printf("\n   modificar pregunta");
+		if(select==7){
 			printf("\n>> salir");
 		}else
 			printf("\n   salir");
@@ -193,13 +210,14 @@ int main(){
 			}
 			if(select==2){
                 system("cls");
-				mostrarRespuestasPorPregunta(L2,1);
+				mostrarRespuestasPorPregunta(L2,LP,1);
                 getch();
             }
             if(select==3){
                 system("cls");
                 int idRespuesta;
-                printf("ingrese un id de respuestas para modificar una respuesta: ");scanf("%i",&idRespuesta);
+                printf("ingrese un id de respuestas para modificar una respuesta: ");
+                scanf("%i",&idRespuesta);
 				modificarRespuesta(L2,idRespuesta);
                 getch();
 			}
@@ -209,6 +227,18 @@ int main(){
                 getch();
 			}
 			if(select==5){
+                system("cls");
+                crearPregunta(&LP);
+            }
+            if(select==6){
+                system("cls");
+                int idPregunta;
+                printf("ingrese un id de pregunta para modificar una pregunta: ");
+                scanf("%i",&idPregunta);
+                modificarPregunta(LP,idPregunta);
+                getch();
+            }
+			if(select==7){
 				apagado++;
             }
 		}
@@ -224,31 +254,30 @@ int main(){
     return 0;
 }
 
-
-//funciones pila 1
-void apilar (struct pila **n, struct pila **tp){
-	(*n)->sgte = (*tp);
+//funciones pila de encuestas
+void apilar (struct pEncuesta **n, struct pEncuesta **tp){
+    (*n)->sgte = (*tp);
 	(*tp) = (*n);
 	(*n) = NULL;
 }
-void desapilar (struct pila **n, struct pila **tp){
+void desapilar (struct pEncuesta **n, struct pEncuesta **tp){
 	(*n) = (*tp);
 	(*tp) = (*tp)->sgte;
 	(*n)->sgte = NULL;
 }
-int vaciaP (struct pila *tp){
+int vaciaP (struct pEncuesta *tp){
 	int band = 0;
 	if (tp == NULL){
 		band = 1;
 	}
 	return band;
 }
-int nuevoP(struct pila **nuevo){
-    *nuevo = (struct pila *) malloc(sizeof(struct pila));
+int nuevoP(struct pEncuesta **nuevo){
+    *nuevo = (struct pEncuesta *) malloc(sizeof(struct pEncuesta));
     return (*nuevo == NULL)? 0 : 1;
 }
-void mostrarP(struct pila **tope){
-    struct pila *nodo=NULL,*topeAux=NULL;
+void mostrarP(struct pEncuesta **tope){
+    struct pEncuesta *nodo=NULL,*topeAux=NULL;
     if(!vaciaP(*tope)){
         while (!vaciaP(*tope)){
             desapilar (&nodo, tope);
@@ -263,52 +292,53 @@ void mostrarP(struct pila **tope){
         printf("ERROR: la pila ingresada para Mostrar esta vacia\n");
 }
 
-//funciones lista 1
-int nuevoL1(struct lista1 **nodo){
-    *nodo = (struct lista1 *) malloc(sizeof(struct lista1));
+//funciones lista de preguntas
+int nuevoLPregunta(struct lPregunta **nodo){
+    *nodo = (struct lPregunta *) malloc(sizeof(struct lPregunta));
     return (*nodo == NULL)? 0 : 1;
 }
-struct lista1 *insertarL1(struct lista1 **nodo, struct lista1 **L){
+
+struct lPregunta *insertarLPregunta(struct lPregunta **nodo, struct lPregunta **L){
     if((*L)!=NULL){
         if((*nodo)->Pregunta_Id < (*L)->Pregunta_Id){
             (*nodo)->sgte=(*L);
             (*L)=(*nodo);
         }else
-            (*L)->sgte=insertarL1(nodo,&(*L)->sgte);
+        (*L)->sgte = insertarLPregunta(nodo,&(*L)->sgte);
     }else{
         (*L)=(*nodo);
     }
     return (*L);
 }
-struct lista1 *mostrarListaL1(struct lista1 **L){
+struct lPregunta *mostrarListaPregunta(struct lPregunta **L){
     if((*L)!=NULL){
-        //contenido de la lista
-        mostrarListaL1(&(*L)->sgte);
+        //contenido de la lista de preguntas
+        mostrarListaPregunta(&(*L)->sgte);
     }
     return (*L);
 }
 
-//funciones lista 2
-int nuevoL2(struct lista2 **nodo){
-    *nodo = (struct lista2 *) malloc(sizeof(struct lista2));
+//funciones lista de respuestas
+int nuevoLRespuesta(struct lRespuesta **nodo){
+    *nodo = (struct lRespuesta *) malloc(sizeof(struct lRespuesta));
     return (*nodo == NULL)? 0 : 1;
 }
-struct lista2 *insertarL2(struct lista2 **nodo, struct lista2 **L){
+struct lRespuesta *insertarLRespuesta(struct lRespuesta **nodo, struct lRespuesta **L){
     if((*L)!=NULL){
         if((*nodo)->Respuesta_Id < (*L)->Respuesta_Id){
             (*nodo)->sgte=(*L);
             (*L)=(*nodo);
         }else
-            (*L)->sgte=insertarL2(nodo,&(*L)->sgte);
+        (*L)->sgte=insertarLRespuesta(nodo,&(*L)->sgte);
     }else{
         (*L)=(*nodo);
     }
     return (*L);
 }
-struct lista2 *mostrarListaL2(struct lista2 **L){
+struct lRespuesta *mostrarListaRespuesta(struct lRespuesta **L){
     if((*L)!=NULL){
-        //contenido de la lista
-        mostrarListaL2(&(*L)->sgte);
+        //contenido de la lista de respuestas
+        mostrarListaRespuesta(&(*L)->sgte);
     }
     return (*L);
 }
@@ -397,46 +427,159 @@ struct arbol *eliminarA(struct arbol **r){
     }
     return NULL;
 }
+//CRUD Preguntas
+void crearPregunta(struct lPregunta **L) {
+    struct lPregunta *nueva = NULL;
+    if (nuevoLPregunta(&nueva)) {
+        if(*L == NULL){
+            nueva->Pregunta_Id = 1;
+        } else {
+            nueva->Pregunta_Id = buscarUltimoIdPregunta(*L) + 1;
+        }
+
+        printf("Ingrese el Encuesta_id de la pregunta: ");
+        scanf("%i", &nueva->Encuesta_Id);
+
+        // LIMPIAR EL BUFFER antes de fgets
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF);
+
+        printf("Ingrese el texto de la pregunta: ");
+        fgets(nueva->Pregunta, sizeof(nueva->Pregunta), stdin);
+        nueva->Pregunta[strcspn(nueva->Pregunta, "\n")] = 0;
+
+        char buffer[256];
+        float ponderacion;
+        do {
+            printf("Ingrese la ponderación de la pregunta (0 < x ≤ 1): ");
+            fgets(buffer, sizeof(buffer), stdin);
+        } while (sscanf(buffer, "%f", &ponderacion) != 1 || ponderacion <= 0 || ponderacion > 1);
+
+        nueva->Ponderacion = ponderacion;
+        nueva->sgte = NULL;
+        insertarLPregunta(&nueva, L);
+        printf("Pregunta creada con éxito.\n");
+    } else {
+        printf("Error al reservar memoria para la pregunta.\n");
+    }
+}
+
+
+
+void modificarPregunta(struct lPregunta *L, int preguntaId) {
+    while (L != NULL) {
+        if (L->Pregunta_Id == preguntaId) {
+            printf("Pregunta actual: %s\nPonderación actual: %.2f\n", L->Pregunta, L->Ponderacion);
+
+            //Limpiar buffer antes de usar fgets
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+
+            printf("Ingrese nuevo texto: ");
+            fgets(L->Pregunta, sizeof(L->Pregunta), stdin);
+            L->Pregunta[strcspn(L->Pregunta, "\n")] = 0;
+
+            //Leer y validar ponderación
+            char buffer[256];
+            float ponderacion;
+            do {
+                printf("Ingrese nueva ponderación (0 < x ≤ 1): ");
+                fgets(buffer, sizeof(buffer), stdin);
+            } while (sscanf(buffer, "%f", &ponderacion) != 1 || ponderacion <= 0 || ponderacion > 1);
+            L->Ponderacion = ponderacion;
+
+            printf("Pregunta modificada.\n");
+            return;
+        }
+        L = L->sgte;
+    }
+    printf("Pregunta con ID %d no encontrada.\n", preguntaId);
+}
+
+int buscarUltimoIdPregunta(struct lPregunta *L) {
+    if (L->sgte == NULL) {
+        return L->Pregunta_Id;
+    }
+    return buscarUltimoIdPregunta(L->sgte);
+}
+
 //CRUD respuestas
-void crearRespuesta(struct lista2 **L) {
-    struct lista2 *nueva = NULL;
-    if (nuevoL2(&nueva)) {
-        printf("Ingrese ID de la respuesta: ");
-        scanf("%d", &nueva->Respuesta_Id);
+void crearRespuesta(struct lRespuesta **L) {
+    struct lRespuesta *nueva = NULL;
+    if (nuevoLRespuesta(&nueva)) {
+        if(*L == NULL){
+            nueva->Respuesta_Id = 1;
+        } else {
+            nueva->Respuesta_Id = buscarUltimoIdRespuesta(*L) + 1;
+        }
         printf("Ingrese ID de la pregunta: ");
         scanf("%d", &nueva->Pregunta_Id);
-        printf("Ingrese número de la respuesta (orden): ");
-        scanf("%d", &nueva->Respuesta_Nro);
+        nueva->Respuesta_Nro=buscarUltimoNumeroRespuesta(*L,nueva->Pregunta_Id)+1;
+        char buffer[256];
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF);
         printf("Ingrese el texto de la respuesta: ");
-        fflush(stdin);
-        scanf("%s", &nueva->Respuesta);
-        printf("Ingrese la ponderación de la respuesta: ");
-        scanf("%f", &nueva->Ponderacion);
-        while(nueva->Ponderacion <= 0 && nueva->Ponderacion > 1){
-            printf("(numero invalido) Ingrese la ponderación de la respuesta: ");
-            scanf("%f", &nueva->Ponderacion);
-        }
+        fgets(nueva->Respuesta, sizeof(nueva->Respuesta), stdin);
+        nueva->Respuesta[strcspn(nueva->Respuesta, "\n")] = 0;
+
+        float ponderacion;
+        do {
+            printf("Ingrese la ponderación de la pregunta (0 < x ≤ 1): ");
+            fgets(buffer, sizeof(buffer), stdin);
+        } while (sscanf(buffer, "%f", &ponderacion) != 1 || ponderacion <= 0 || ponderacion > 1);
+        nueva->Ponderacion = ponderacion;
         printf("¿Es la opción elegida? (1=Sí, 0=No): ");
         scanf("%d", &nueva->Elegida);
         nueva->sgte = NULL;
-        //carga al arch_respuestas
-        insertarL2(&nueva, L);
+        insertarLRespuesta(&nueva, L);
         printf("Respuesta creada con éxito.\n");
     } else {
         printf("Error al reservar memoria para la respuesta.\n");
     }
 }
-void mostrarRespuestasPorPregunta(struct lista2 *L, int preguntaId) {
-    printf("Respuestas para la pregunta %d:\n", preguntaId);
-    while (L != NULL) {
-        if (L->Pregunta_Id == preguntaId) {
-            printf("ID: %d | Nro: %d | Texto: %s | Ponderación: %.2f | Elegida: %d\n",
-                   L->Respuesta_Id, L->Respuesta_Nro, L->Respuesta, L->Ponderacion, L->Elegida);
+void mostrarRespuestasPorPregunta(struct lRespuesta *respuestas, struct lPregunta *preguntas, int preguntaId) {
+    // Buscar y mostrar la pregunta asociada
+    struct lPregunta *p = preguntas;
+    int encontrada = 0;
+
+    while (p != NULL) {
+        if (p->Pregunta_Id == preguntaId) {
+            printf("=== Pregunta ID %d ===\n", p->Pregunta_Id);
+            printf("Texto: %s\n", p->Pregunta);
+            printf("Ponderación: %.2f\n", p->Ponderacion);
+            encontrada = 1;
+            break;
         }
-        L = L->sgte;
+        p = p->sgte;
+    }
+
+    if (!encontrada) {
+        printf("No se encontró una pregunta con ID %d.\n", preguntaId);
+        return;
+    }
+
+    // Mostrar respuestas asociadas
+    printf("\n--- Respuestas asociadas ---\n");
+    int hayRespuestas = 0;
+    while (respuestas != NULL) {
+        if (respuestas->Pregunta_Id == preguntaId) {
+            printf("ID: %d | Nro: %d | Texto: %s | Ponderación: %.2f | Elegida: %s\n",
+                   respuestas->Respuesta_Id,
+                   respuestas->Respuesta_Nro,
+                   respuestas->Respuesta,
+                   respuestas->Ponderacion,
+                   respuestas->Elegida ? "Sí" : "No");
+            hayRespuestas = 1;
+        }
+        respuestas = respuestas->sgte;
+    }
+
+    if (!hayRespuestas) {
+        printf("No hay respuestas registradas para esta pregunta.\n");
     }
 }
-void modificarRespuesta(struct lista2 *L, int respuestaId) {
+
+void modificarRespuesta(struct lRespuesta *L, int respuestaId) {
     while (L != NULL) {
         if (L->Respuesta_Id == respuestaId) {
             printf("Respuesta actual: %s\n", L->Respuesta);
@@ -458,13 +601,30 @@ void modificarRespuesta(struct lista2 *L, int respuestaId) {
     }
     printf("Respuesta con ID %d no encontrada.\n", respuestaId);
 }
-void eliminarRespuestasDePregunta(struct lista2 **L, int preguntaId) {
-    struct lista2 *actual = *L;
-    struct lista2 *anterior = NULL;
+int buscarUltimoIdRespuesta(struct lRespuesta *L) {
+    if (L->sgte == NULL) {
+        return L->Respuesta_Id;
+    }
+    return buscarUltimoIdRespuesta(L->sgte);
+}
+int buscarUltimoNumeroRespuesta(struct lRespuesta *L, int preguntaId) {
+    int maxNro = 0;
+    while (L != NULL) {
+        if (L->Pregunta_Id == preguntaId && L->Respuesta_Nro > maxNro) {
+            maxNro = L->Respuesta_Nro;
+        }
+        L = L->sgte;
+    }
+    return maxNro;
+}
+
+void eliminarRespuestasDePregunta(struct lRespuesta **L, int preguntaId) {
+    struct lRespuesta *actual = *L;
+    struct lRespuesta *anterior = NULL;
 
     while (actual != NULL) {
         if (actual->Pregunta_Id == preguntaId) {
-            struct lista2 *aBorrar = actual;
+            struct lRespuesta *aBorrar = actual;
             if (anterior == NULL) {
                 *L = actual->sgte;
                 actual = *L;
@@ -480,15 +640,16 @@ void eliminarRespuestasDePregunta(struct lista2 **L, int preguntaId) {
     }
     printf("Respuestas de la pregunta %d eliminadas.\n", preguntaId);
 }
-void cargar_respuestas_csv(struct lista2 *L) {
-    struct lista2 *aux = NULL;
+void cargar_respuestas_csv(struct lRespuesta *L) {
+    struct lRespuesta *aux = NULL;
     const char *RespuestasCSV="respuestas.csv";
     FILE *archivo = fopen(RespuestasCSV, "w");
     if (archivo == NULL) {
         printf("Error al abrir el archivo.\n");
         return;
     } else {
-        fprintf(archivo, "Respuesta_Id;Pregunta_Id;Respuesta_Nro;Respuesta;Ponderacion;Elegida\n");
+        //esta es la forma en la que se guardan los datos en el archivo
+        //fprintf(archivo, "Respuesta_Id;Pregunta_Id;Respuesta_Nro;Respuesta;Ponderacion;Elegida\n");
         aux = L;
         while (aux != NULL) {
             fprintf(archivo, "%d;%d;%d;\"%s\";%.2f;%d\n",
