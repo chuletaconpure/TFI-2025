@@ -88,14 +88,14 @@ int nuevoLRespuesta(struct lRespuesta **nodo);
 struct lRespuesta *insertarLRespuesta(struct lRespuesta **nodo, struct lRespuesta **L);
 struct lRespuesta *mostrarListaRespuesta(struct lRespuesta **L);
 
-//funciones arbol
-struct arbol *insertarA(struct arbol **A, struct arbol **nodo);
-void mostrarA(struct arbol **A);
-int nuevoA(struct arbol **nodo);
-void buscarA(int dato, struct arbol *r);
-void busBorrA(struct arbol **r, int dato);
-void borrarNodoA(struct arbol **nodo);
-struct arbol *eliminarA(struct arbol **r);
+//funciones arbol_respondidas
+struct arbol_respondidas *insertarA(struct arbol_respondidas **A, struct arbol_respondidas **nodo);
+void mostrarA(struct arbol_respondidas **A);
+int nuevoA(struct arbol_respondidas **nodo);
+void buscarA(int dato, struct arbol_respondidas *r);
+void busBorrA(struct arbol_respondidas **r, int dato);
+void borrarNodoA(struct arbol_respondidas **nodo);
+struct arbol_respondidas *eliminarA(struct arbol_respondidas **r);
 
 //funciones esteticas
 void colorMenu(){ 
@@ -146,13 +146,17 @@ void extraer_encuestas_csv(struct pEncuesta **tp);
 //usaremos una lista que contenga todos los datos de la encuesta a mostrar cumpliendo la consigna b,
 //la lista contendra una lista de preguntas y una lista de respuestas que perteneceran a la encuesta
 //durante el proceso de carga podremos calcular la ponderacion de todas las respuestas para calcular la ponderacion total de la encuesta
-struct arbol{
+
+//el arbol representara la respuesta elegida de cada pregunta de la encuesta
+struct arbol_respondidas{
     int Encuesta_Id;
-    struct lPregunta *L_Preguntas;
-    struct lRespuesta *L_Respuestas;
-    float Ponderacion_total;
-    struct arbol *der;
-    struct arbol *izq;
+    int Pregunta_Id;
+    int Respuesta_Id;
+    int Anio;
+    int Encuesta_Mes;
+    int dia;
+    struct arbol_respondidas *der;
+    struct arbol_respondidas *izq;
 };
 
 int main(){
@@ -161,7 +165,7 @@ int main(){
     struct pEncuesta *tp=NULL, *nodoP=NULL;
     struct lRespuesta *L2=NULL,*nodoL2=NULL;
     struct lPregunta *LP=NULL, *nodoLP=NULL;
-    struct arbol *A=NULL, *nodoA=NULL;
+    struct arbol_respondidas *A=NULL, *nodoA=NULL;
     //inicializacion de las estructuras
     extraer_respuestas_csv(&L2);
     extraer_preguntas_csv(&LP);
@@ -416,11 +420,11 @@ struct lRespuesta *mostrarListaRespuesta(struct lRespuesta **L){
     return (*L);
 }
 
-//funciones arbol
-struct arbol *insertarA(struct arbol **A, struct arbol **nodo) {
+//funciones arbol_respondidas
+struct arbol_respondidas *insertarA(struct arbol_respondidas **A, struct arbol_respondidas **nodo) {
     if ((*A) != NULL) {
         if ((*A)->Encuesta_Id == (*nodo)->Encuesta_Id) {
-            printf("Ya esta en el arbol\n");
+            printf("Ya esta en el arbol_respondidas\n");
         } else if ((*nodo)->Encuesta_Id < (*A)->Encuesta_Id) {
             (*A)->izq = insertarA(&(*A)->izq, nodo);
         } else {
@@ -431,18 +435,18 @@ struct arbol *insertarA(struct arbol **A, struct arbol **nodo) {
     }
     return (*A);
 }
-void mostrarA(struct arbol **A){
+void mostrarA(struct arbol_respondidas **A){
     if((*A)!=NULL){
         mostrarA(&(*A)->izq);
         printf("\nid: %i", (*A)->Encuesta_Id);
         mostrarA(&(*A)->der);
     }
 }
-int nuevoA(struct arbol **nodo){
-    *nodo = (struct arbol *) malloc(sizeof(struct arbol));
+int nuevoA(struct arbol_respondidas **nodo){
+    *nodo = (struct arbol_respondidas *) malloc(sizeof(struct arbol_respondidas));
     return (*nodo == NULL)? 0 : 1;
 }
-void buscarA(int dato, struct arbol *r) {
+void buscarA(int dato, struct arbol_respondidas *r) {
     if (r != NULL) {
         if (dato == r->Encuesta_Id) {
             printf("Dato encontrado: ");
@@ -455,7 +459,7 @@ void buscarA(int dato, struct arbol *r) {
         printf("El dato buscado no se encuentra en el árbol\n");
     }
 }
-void busBorrA(struct arbol **r, int dato) {
+void busBorrA(struct arbol_respondidas **r, int dato) {
     if (*r != NULL) {
         if (dato == (*r)->Encuesta_Id) {
             borrarNodoA(r);
@@ -468,8 +472,8 @@ void busBorrA(struct arbol **r, int dato) {
         printf("No se encontró\n");
     }
 }
-void borrarNodoA(struct arbol **nodo) {
-    struct arbol *aux = *nodo;
+void borrarNodoA(struct arbol_respondidas **nodo) {
+    struct arbol_respondidas *aux = *nodo;
     if (aux->izq == NULL && aux->der == NULL) {
         free(aux);
         *nodo = NULL;
@@ -483,7 +487,7 @@ void borrarNodoA(struct arbol **nodo) {
         free(aux);
     }
     else {
-        struct arbol **mayor = &(*nodo)->izq;
+        struct arbol_respondidas **mayor = &(*nodo)->izq;
         while ((*mayor)->der != NULL) {
             mayor = &(*mayor)->der;
         }
@@ -491,7 +495,7 @@ void borrarNodoA(struct arbol **nodo) {
         borrarNodoA(mayor);
     }
 }
-struct arbol *eliminarA(struct arbol **r){
+struct arbol_respondidas *eliminarA(struct arbol_respondidas **r){
     if ((*r) != NULL) {
         (*r)->izq = eliminarA(&(*r)->izq);
         (*r)->der = eliminarA(&(*r)->der);
