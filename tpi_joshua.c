@@ -113,7 +113,7 @@ void letraB(){
     SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE | BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY);
 }
 void letraA(){
-	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY);
 }
 //CRUD Encuestas
@@ -126,6 +126,7 @@ void eliminarEncuesta(struct pEncuesta **tp, int id);
 void crearPregunta(struct lPregunta **L);
 void modificarPregunta(struct lPregunta *L, int preguntaId);
 int buscarUltimoIdPregunta(struct lPregunta *L);
+void eliminarpreguntasDeEncuesta(struct lPregunta **L,struct lRespuesta **L2, int Encuesta_Id);
 //CRUD respuestas
 void crearRespuesta(struct lRespuesta **L);
 void mostrarRespuestasPorPregunta(struct lRespuesta *respuestas, struct lPregunta *preguntas, int preguntaId);
@@ -154,10 +155,14 @@ struct arbol_respondidas{
     int Respuesta_Id;
     int Anio;
     int Encuesta_Mes;
+    int Encuestador_id;
+    int EncuestaRespondida_Id;
     int dia;
     struct arbol_respondidas *der;
     struct arbol_respondidas *izq;
 };
+//funciones de filtro
+void verificarPonderacionPreguntas(struct lPregunta **L,struct lRespuesta **L2);
 
 int main(){
     //menu principal
@@ -176,13 +181,17 @@ int main(){
     colorMenu();
 	int apagado=0;
 	char w=1;
-	int select=1,tam=11;
+	int select=1,tam=12;
+    printf("verificando ponderacion de preguntas...\n");
+    verificarPonderacionPreguntas(&LP,&L2);
+    getch();
 	while(!apagado){
 		system("cls");
 		printf("<<<<TP integrador>>>>\n");
         letraR();
         printf("---------------------\n");
         colorMenu();
+        //verifica que las preguntas tengan una ponderacion correcta, si no la tienen se eliminan
         //menu visual para seleccionar una opcion
 		if(select==1){
 			printf("\n>> crear respuesta");
@@ -224,7 +233,11 @@ int main(){
             printf("\n>> modificar encuesta"); 
         else 
             printf("\n   modificar encuesta");
-        if(select==11){
+        if(select==11) 
+            printf("\n>> calcular ponderacion de preguntas"); 
+        else 
+            printf("\n   calcular ponderacion de preguntas");
+        if(select==12){
 			printf("\n>> salir");
 		}else
 			printf("\n   salir");
@@ -304,6 +317,11 @@ int main(){
                 getch();
             }
             if(select==11){
+                system("cls");
+                getch();
+            }
+            
+            if(select==12){
                 apagado++;
             }
         }
@@ -312,6 +330,7 @@ int main(){
     cargar_respuestas_csv(L2);
     cargar_preguntas_csv(LP);
     cargar_encuestas_csv(&tp);
+        
     //al finalizar se liberan todas las estructuras
     while(!vaciaP(tp)){
         desapilar(&nodoP,&tp);
@@ -702,7 +721,31 @@ int buscarUltimoIdPregunta(struct lPregunta *L) {
     }
     return buscarUltimoIdPregunta(L->sgte);
 }
+void eliminarpreguntasDeEncuesta(struct lPregunta **L, struct lRespuesta **L2, int Encuesta_Id){
+    struct lPregunta *actual = *L;
+    struct lPregunta *anterior = NULL;
 
+    while (actual != NULL) {
+        if (actual->Encuesta_Id == Encuesta_Id) {
+            struct lPregunta *aBorrar = actual;
+            int idPreguntaABorrar = aBorrar->Pregunta_Id; // <-- Guardar antes de modificar actual
+            if (anterior == NULL) {
+                *L = actual->sgte;
+                actual = *L;
+            } else {
+                anterior->sgte = actual->sgte;
+                actual = anterior->sgte;
+            }
+            printf("Pregunta eliminada: %s\n", aBorrar->Pregunta);
+            eliminarRespuestasDePregunta(L2, idPreguntaABorrar); // Usar el id guardado
+            free(aBorrar);
+        } else {
+            anterior = actual;
+            actual = actual->sgte;
+        }
+    }
+    printf("Preguntas de la encuesta %d eliminadas.\n", Encuesta_Id);
+}
 //CRUD respuestas
 void crearRespuesta(struct lRespuesta **L) {
     struct lRespuesta *nueva = NULL;
@@ -839,6 +882,7 @@ void eliminarRespuestasDePregunta(struct lRespuesta **L, int preguntaId) {
                 anterior->sgte = actual->sgte;
                 actual = anterior->sgte;
             }
+            printf("Respuesta eliminada: %s\n", aBorrar->Respuesta);
             free(aBorrar);
         } else {
             anterior = actual;
@@ -988,3 +1032,41 @@ void extraer_encuestas_csv(struct pEncuesta **tp) {
     }
     fclose(archivo);
 }
+
+void verificarPonderacionPreguntas(struct lPregunta **L,struct lRespuesta **L2) {
+	struct lPregunta *r=NULL; //puntero para recorrer la lista
+    int id_aux = 0; //para controlar que 
+    float suma = 0;
+    
+    r = *L;
+    while (r != NULL) {
+    	//aca cambia de id de encuesta, o sea que evalua la ponderacion
+        if (r->Encuesta_Id != id_aux) {
+            if (id_aux != 0) {
+                printf("la encuesta %d tiene %.2f de ponderacion\n ", id_aux, suma);
+                if (suma == 1) {
+                    printf("ponderacion correcta\n");
+                }else{
+                    printf("la preguntas de la encuesta %d no tienen una ponderacion correcta, se eliminan\n", id_aux);
+                    eliminarpreguntasDeEncuesta(L,L2, id_aux);
+                }
+            }
+            // actualizo todo
+            id_aux = r->Encuesta_Id;
+            suma = 0;
+        }
+        suma += r->Ponderacion;
+        r = r->sgte;
+    }
+    // si  no hago esto no se evalua la ultima encuesta
+    if (id_aux != -1) {
+	printf("la encuesta %d tiene %.2f de ponderacion\n ", id_aux, suma);
+	if (suma == 1) {
+	    printf("ponderacion correcta\n");
+	}else{
+	    printf("la preguntas de la encuesta %d no tienen una ponderacion correcta, se eliminan\n", id_aux);
+	    eliminarpreguntasDeEncuesta(L,L2, id_aux);
+	}
+    }
+}
+
