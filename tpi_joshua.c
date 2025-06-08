@@ -142,6 +142,8 @@ void cargar_encuestas_csv(struct pEncuesta **tp);
 void extraer_respuestas_csv(struct lRespuesta **L);
 void extraer_preguntas_csv(struct lPregunta **L);
 void extraer_encuestas_csv(struct pEncuesta **tp);
+void extraer_arbol_csv(struct arbol_respondidas **A, const char *Encuestas_Respondidas);
+
 
 //Desarrollo de las consignas:
 //usaremos una lista que contenga todos los datos de la encuesta a mostrar cumpliendo la consigna b,
@@ -175,6 +177,8 @@ int main(){
     extraer_respuestas_csv(&L2);
     extraer_preguntas_csv(&LP);
     extraer_encuestas_csv(&tp);
+    extraer_arbol_csv(&A, "Encuestas_Respondidas.csv");
+
     int id;
     //funcion system para permitir mas caracteres y caracteres especiales
     system("chcp 65001");
@@ -1030,6 +1034,44 @@ void extraer_encuestas_csv(struct pEncuesta **tp) {
             apilar(&nueva, tp);
         }
     }
+    fclose(archivo);
+}
+void extraer_arbol_csv(struct arbol_respondidas **A, const char *Encuestas_Respondidas) {
+	struct arbol_respondidas *nuevo = NULL;
+    FILE *archivo = fopen(Encuestas_Respondidas, "r");
+    char linea[300];
+    
+    if (archivo == NULL) {
+        printf("Error en %s.\n", Encuestas_Respondidas);
+        return;
+    }   
+    while (fgets(linea, sizeof(linea), archivo)) {
+        nuevo = (struct arbol_respondidas *) malloc(sizeof(struct arbol_respondidas));
+        if (nuevo == NULL) {
+            printf("error de memoria.\n");
+            continue;
+        }
+
+        int fecha_num;
+        sscanf(linea, "%d;%d;%d;%d;%d;%d",
+            &nuevo->Encuesta_Id,
+            &nuevo->Pregunta_Id,
+            &nuevo->Respuesta_Id,
+            &fecha_num,
+            &nuevo->Encuestador_id,
+            &nuevo->EncuestaRespondida_Id
+        );
+
+        nuevo->Anio = fecha_num / 10000;
+        nuevo->Encuesta_Mes = (fecha_num / 100) % 100;
+        nuevo->dia = fecha_num % 100;
+
+        nuevo->izq = NULL;
+        nuevo->der = NULL;
+
+        insertarA(A, &nuevo);
+    }
+
     fclose(archivo);
 }
 
