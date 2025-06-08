@@ -137,6 +137,10 @@ void eliminarRespuestasDePregunta(struct lRespuesta **L, int preguntaId);
 void cargar_respuestas_csv(struct lRespuesta *L);
 void cargar_preguntas_csv(struct lPregunta *L);
 void cargar_encuestas_csv(struct pEncuesta **tp);
+// funciones de extraccion de datos desde CSV
+void extraer_respuestas_csv(struct lRespuesta **L);
+void extraer_preguntas_csv(struct lPregunta **L);
+void extraer_encuestas_csv(struct pEncuesta **tp);
 
 //Desarrollo de las consignas:
 //usaremos una lista que contenga todos los datos de la encuesta a mostrar cumpliendo la consigna b,
@@ -157,6 +161,11 @@ int main(){
     struct pEncuesta *tp=NULL, *nodoP=NULL;
     struct lRespuesta *L2=NULL,*nodoL2=NULL;
     struct lPregunta *LP=NULL, *nodoLP=NULL;
+    struct arbol *A=NULL, *nodoA=NULL;
+    //inicializacion de las estructuras
+    extraer_respuestas_csv(&L2);
+    extraer_preguntas_csv(&LP);
+    extraer_encuestas_csv(&tp);
     int id;
     //funcion system para permitir mas caracteres y caracteres especiales
     system("chcp 65001");
@@ -904,6 +913,73 @@ void cargar_encuestas_csv(struct pEncuesta **tp) {
         while (!vaciaP(aux)) {
             desapilar(&nodo, &aux);
             apilar(&nodo, tp);
+        }
+    }
+    fclose(archivo);
+}
+// funciones de extraccion de datos desde CSV
+void extraer_respuestas_csv(struct lRespuesta **L) {
+    FILE *archivo = fopen("respuestas.csv", "r");
+    if (archivo == NULL) {
+        printf("Error al abrir el archivo de respuestas.\n");
+        return;
+    }
+    char linea[256];
+    while (fgets(linea, sizeof(linea), archivo)) {
+        struct lRespuesta *nueva = NULL;
+        if (nuevoLRespuesta(&nueva)) {
+            sscanf(linea, "%d;%d;%d;%[^;];%f;%d",
+                   &nueva->Respuesta_Id,
+                   &nueva->Pregunta_Id,
+                   &nueva->Respuesta_Nro,
+                   nueva->Respuesta,
+                   &nueva->Ponderacion,
+                   &nueva->Elegida);
+            nueva->sgte = NULL;
+            insertarLRespuesta(&nueva, L);
+        }
+    }
+    fclose(archivo);
+}
+void extraer_preguntas_csv(struct lPregunta **L) {
+    FILE *archivo = fopen("preguntas.csv", "r");
+    if (archivo == NULL) {
+        printf("Error al abrir el archivo de preguntas.\n");
+        return;
+    }
+    char linea[256];
+    while (fgets(linea, sizeof(linea), archivo)) {
+        struct lPregunta *nueva = NULL;
+        if (nuevoLPregunta(&nueva)) {
+            sscanf(linea, "%d;%d;%[^;];%f",
+                   &nueva->Encuesta_Id,
+                   &nueva->Pregunta_Id,
+                   nueva->Pregunta,
+                   &nueva->Ponderacion);
+            nueva->sgte = NULL;
+            insertarLPregunta(&nueva, L);
+        }
+    }
+    fclose(archivo);
+}
+void extraer_encuestas_csv(struct pEncuesta **tp) {
+    FILE *archivo = fopen("encuestas.csv", "r");
+    if (archivo == NULL) {
+        printf("Error al abrir el archivo de encuestas.\n");
+        return;
+    }
+    char linea[256];
+    while (fgets(linea, sizeof(linea), archivo)) {
+        struct pEncuesta *nueva = NULL;
+        if (nuevoP(&nueva)) {
+            sscanf(linea, "%d;%[^;];%d;%d;%d",
+                   &nueva->Encuesta_id,
+                   nueva->Denominacion,
+                   &nueva->Encuesta_Mes,
+                   &nueva->Anio,
+                   &nueva->Procesada);
+            nueva->sgte = NULL;
+            apilar(&nueva, tp);
         }
     }
     fclose(archivo);
