@@ -121,6 +121,7 @@ void letraA(){
 void crearEncuesta(struct pEncuesta **tp);
 void mostrarEncuestas(struct pEncuesta **tp);
 int buscarUltimoIdEncuesta(struct pEncuesta **tp);
+int buscarMaxIdEncuestaCSV(const char *archivo);
 void modificarEncuesta(struct pEncuesta **tp, int id);
 void eliminarEncuesta(struct pEncuesta **tp, int id);
 //CRUD Preguntas
@@ -128,6 +129,7 @@ void crearPregunta(struct lPregunta **L);
 void modificarPregunta(struct lPregunta *L, int preguntaId);
 int buscarUltimoIdPregunta(struct lPregunta *L);
 void eliminarpreguntasDeEncuesta(struct lPregunta **L,struct lRespuesta **L2, int Encuesta_Id);
+void imprimirPreguntas(struct lPregunta *L);
 //CRUD respuestas
 void crearRespuesta(struct lRespuesta **L);
 void mostrarRespuestasPorPregunta(struct lRespuesta *respuestas, struct lPregunta *preguntas, int preguntaId);
@@ -186,7 +188,7 @@ int main(){
     colorMenu();
 	int apagado=0;
 	char w=1;
-int select=1,tam=13;
+	int select=1,tam=14;
     printf("verificando ponderacion de preguntas...\n");
     verificarPonderacionPreguntas(&LP,&L2);
     getch();
@@ -215,38 +217,42 @@ int select=1,tam=13;
 		}else
 			printf("\n   eliminar respuestas de una pregunta");
 		if(select==5){
+			printf("\n>> mostrar preguntas");
+		}else
+			printf("\n   mostrar preguntas");
+        if(select==6){
 			printf("\n>> crear pregunta");
 		}else
 			printf("\n   crear pregunta");
-        if(select==6){
+        if(select==7){
 			printf("\n>> modificar pregunta");
 		}else
 			printf("\n   modificar pregunta");
-		if(select==7) 
+		if(select==8) 
             printf("\n>> eliminar encuesta"); 
         else 
             printf("\n   eliminar encuesta");
-        if(select==8)
+        if(select==9)
             printf("\n>> crear encuesta"); 
         else 
             printf("\n   crear encuesta");
-        if(select==9) 
+        if(select==10) 
             printf("\n>> mostrar encuestas"); 
         else 
             printf("\n   mostrar encuestas");
-        if(select==10) 
+        if(select==11) 
             printf("\n>> modificar encuesta"); 
         else 
             printf("\n   modificar encuesta");
-        if(select==11) 
+        if(select==12) 
             printf("\n>> calcular ponderacion de preguntas"); 
         else 
             printf("\n   calcular ponderacion de preguntas");
-        if(select==12){
+        if(select==13){
 			printf("\n>> mostrar encuestas respondidas(arbol)");
 		}else
 			printf("\n   mostrar encuestas respondidas(arbol)");
-        if(select==13){
+        if(select==14){
 			printf("\n>> salir");
 		}else
 			printf("\n   salir");
@@ -292,49 +298,55 @@ int select=1,tam=13;
             }
             if(select==5){
                 system("cls");
-                crearPregunta(&LP);
+                imprimirPreguntas(LP);
+                getch();
             }
             if(select==6){
+                system("cls");
+                crearPregunta(&LP);
+                getch();
+            }
+            if(select==7){
                 system("cls");
                 printf("ingrese un id de pregunta para modificar una pregunta: ");
                 scanf("%i",&id);
                 modificarPregunta(LP,id);
                 getch();
             }
-            if(select==7){
+            if(select==8){
                 system("cls");
                 printf("Ingrese ID de encuesta a eliminar: ");
                 scanf("%d", &id);
                 eliminarEncuesta(&tp, id);
                 getch();
             }
-            if(select==8){
+            if(select==9){
                 system("cls");
                 crearEncuesta(&tp);
                 getch();
             }
-            if(select==9){
+            if(select==10){
                 system("cls");
                 mostrarEncuestas(&tp);
                 getch();
             }
-            if(select==10){
+            if(select==11){
                 system("cls");
                 printf("Ingrese ID de encuesta a modificar: ");
                 scanf("%d", &id);
                 modificarEncuesta(&tp, id);
                 getch();
             }
-            if(select==11){
+            if(select==12){
                 system("cls");
                 getch();
             }
-            if(select==12){
+            if(select==13){
                 system("cls");
                 imprimirArbol(A);
                 getch();
             }
-            if(select==13){
+            if(select==14){
                 apagado++;
             }
         }
@@ -541,14 +553,18 @@ void crearEncuesta(struct pEncuesta **tp) {
     struct pEncuesta *nueva = NULL;
     if (nuevoP(&nueva)) {
         int c;
-        
-        // asignar ID automáticamente
-        if(*tp == NULL){
-            nueva->Encuesta_id = 1;
-        }else
-        nueva->Encuesta_id = buscarUltimoIdEncuesta(tp) + 1;    
+        int maxIdMem = 0, maxIdCSV = 0;
+        // Buscar el máximo ID en memoria
+        if(*tp != NULL){
+            maxIdMem = buscarUltimoIdEncuesta(tp);
+        }
+        // Buscar el máximo ID en el archivo CSV
+        maxIdCSV = buscarMaxIdEncuestaCSV("encuestas.csv");
+        // Asignar el ID mayor + 1
+        int nuevoId = (maxIdMem > maxIdCSV ? maxIdMem : maxIdCSV) + 1;
+        nueva->Encuesta_id = nuevoId;
+
         while ((c = getchar()) != '\n' && c != EOF); // limpiar buffer
-        // solicitar datos de la encuesta
         printf("Ingrese denominación de la encuesta: ");
         fgets(nueva->Denominacion, sizeof(nueva->Denominacion), stdin);
         nueva->Denominacion[strcspn(nueva->Denominacion, "\n")] = 0;
@@ -603,6 +619,17 @@ int buscarUltimoIdEncuesta(struct pEncuesta **tp) {
     id = nodo->Encuesta_id;
     apilar(&nodo,tp);
     return id;
+}
+int buscarMaxIdEncuestaCSV(const char *Encuestas) {
+    FILE *archivo = fopen(Encuestas, "r");
+    if (!archivo) return 0;
+    int maxId = 0, id, mes, anio, procesada;
+    char denominacion[100];
+    while (fscanf(archivo, "%d;%[^;];%d;%d;%d\n", &id, denominacion, &mes, &anio, &procesada) == 5) {
+        if (id > maxId) maxId = id;
+    }
+    fclose(archivo);
+    return maxId;
 }
 void modificarEncuesta(struct pEncuesta **tp, int id) {
     struct pEncuesta *nodo = NULL, *aux = NULL;
@@ -758,6 +785,18 @@ void eliminarpreguntasDeEncuesta(struct lPregunta **L, struct lRespuesta **L2, i
         }
     }
     printf("Preguntas de la encuesta %d eliminadas.\n", Encuesta_Id);
+}
+void imprimirPreguntas(struct lPregunta *L) {
+    if (L == NULL) {
+        printf("No hay preguntas registradas.\n");
+        return;
+    }
+    printf("=== Lista de preguntas ===\n");
+    while (L != NULL) {
+        printf("Encuesta ID: %d | Pregunta ID: %d | Texto: %s | Ponderación: %.2f\n",
+               L->Encuesta_Id, L->Pregunta_Id, L->Pregunta, L->Ponderacion);
+        L = L->sgte;
+    }
 }
 //CRUD respuestas
 void crearRespuesta(struct lRespuesta **L) {
