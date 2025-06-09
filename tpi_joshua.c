@@ -97,8 +97,6 @@ void busBorrA(struct arbol_respondidas **r, int dato);
 void borrarNodoA(struct arbol_respondidas **nodo);
 struct arbol_respondidas *eliminarA(struct arbol_respondidas **r);
 void imprimirArbol(struct arbol_respondidas *r);
-void MostrarEncuestasRespondidas(struct arbol_respondidas *A, struct lPregunta *preguntas, struct lRespuesta *respuestas, int encuestaRespondidaId, int *encontrado);
-
 
 //funciones esteticas
 void colorMenu(){ 
@@ -123,7 +121,6 @@ void letraA(){
 void crearEncuesta(struct pEncuesta **tp);
 void mostrarEncuestas(struct pEncuesta **tp);
 int buscarUltimoIdEncuesta(struct pEncuesta **tp);
-int buscarMaxIdEncuestaCSV(const char *archivo);
 void modificarEncuesta(struct pEncuesta **tp, int id);
 void eliminarEncuesta(struct pEncuesta **tp, int id);
 //CRUD Preguntas
@@ -131,7 +128,6 @@ void crearPregunta(struct lPregunta **L);
 void modificarPregunta(struct lPregunta *L, int preguntaId);
 int buscarUltimoIdPregunta(struct lPregunta *L);
 void eliminarpreguntasDeEncuesta(struct lPregunta **L,struct lRespuesta **L2, int Encuesta_Id);
-void imprimirPreguntas(struct lPregunta *L);
 //CRUD respuestas
 void crearRespuesta(struct lRespuesta **L);
 void mostrarRespuestasPorPregunta(struct lRespuesta *respuestas, struct lPregunta *preguntas, int preguntaId);
@@ -168,16 +164,52 @@ struct arbol_respondidas{
     struct arbol_respondidas *der;
     struct arbol_respondidas *izq;
 };
+struct pilaRespondida{
+    int Encuesta_Id;
+    int Pregunta_Id;
+    int Respuesta_Id;
+    int Anio;
+    int Encuesta_Mes;
+    int Encuestador_id;
+    int EncuestaRespondida_Id;
+    int dia;
+    struct pilaRespondida *sgte;
+};
+struct lPponderaciones {
+    int Encuesta_Id;
+    int Pregunta_Id;
+    float Ponderacion_Total;
+    struct lPponderaciones *sgte;
+};
 //funciones de filtro
 void verificarPonderacionPreguntas(struct lPregunta **L,struct lRespuesta **L2);
+void filtrarRespondidas(struct arbol_respondidas **A, int Encuesta_Id, struct pilaRespondida **tope);
+void mostrarPilaRespondida(struct pilaRespondida **tope);
+int nuevoLPreguntaPonderacion(struct lPponderaciones **nodo);
+struct lPponderaciones *insertarLPreguntaPonderacion(struct lPponderaciones **nodo, struct lPponderaciones **L);
+void procesarEncuesta(struct pilaRespondida **tpRespondida,struct lPponderaciones **LPponder,struct pEncuesta **tp, int Encuesta_Id, struct lPregunta **LP, struct lRespuesta **L2, struct arbol_respondidas **A);
+void apilarRespondida(struct pilaRespondida **nodo, struct pilaRespondida **tope);
+int nuevoNodoPilaRespondida(struct pilaRespondida **nodo);
+void desapilarRespondida(struct pilaRespondida **tope, struct pilaRespondida **nodo);
+int vaciaPilaRespondida(struct pilaRespondida *tp);
+void mostrarPonderaciones(struct lPponderaciones **L);
+void sumarPonderacionesEncuesta(int Encuesta_Id, struct lPponderaciones **L);
+void acumularListaPonderaciones(struct lPponderaciones **L, struct lPponderaciones **ListaFinal);
+void apilarLP(struct lPponderaciones **nodo, struct lPponderaciones **L);
+void desapilarLP(struct lPponderaciones **nodo, struct lPponderaciones **L);
+int vaciaLP(struct lPponderaciones *L);
 
 int main(){
+    srand(time(NULL)); // inicializa la semilla para generar numeros aleatorios
     //menu principal
     //variables
     struct pEncuesta *tp=NULL, *nodoP=NULL;
     struct lRespuesta *L2=NULL,*nodoL2=NULL;
     struct lPregunta *LP=NULL, *nodoLP=NULL;
     struct arbol_respondidas *A=NULL, *nodoA=NULL;
+    struct pilaRespondida *tpRespondida = NULL, *nodoPila = NULL;
+    struct lPponderaciones *LPponder = NULL, *nodoLPonder = NULL;
+    struct lPponderaciones *ListaFinal = NULL, *nodoListaFinal = NULL;
     //inicializacion de las estructuras
     extraer_respuestas_csv(&L2);
     extraer_preguntas_csv(&LP);
@@ -190,7 +222,7 @@ int main(){
     colorMenu();
 	int apagado=0;
 	char w=1;
-	int select=1,tam=15;
+    int select=1,tam=13;
     printf("verificando ponderacion de preguntas...\n");
     verificarPonderacionPreguntas(&LP,&L2);
     getch();
@@ -219,49 +251,41 @@ int main(){
 		}else
 			printf("\n   eliminar respuestas de una pregunta");
 		if(select==5){
-			printf("\n>> mostrar preguntas");
-		}else
-			printf("\n   mostrar preguntas");
-        if(select==6){
 			printf("\n>> crear pregunta");
 		}else
 			printf("\n   crear pregunta");
-        if(select==7){
+        if(select==6){
 			printf("\n>> modificar pregunta");
 		}else
 			printf("\n   modificar pregunta");
-		if(select==8) 
+		if(select==7) 
             printf("\n>> eliminar encuesta"); 
         else 
             printf("\n   eliminar encuesta");
-        if(select==9)
+        if(select==8)
             printf("\n>> crear encuesta"); 
         else 
             printf("\n   crear encuesta");
-        if(select==10) 
+        if(select==9) 
             printf("\n>> mostrar encuestas"); 
         else 
             printf("\n   mostrar encuestas");
-        if(select==11) 
+        if(select==10) 
             printf("\n>> modificar encuesta"); 
         else 
             printf("\n   modificar encuesta");
-        if(select==12) 
-            printf("\n>> calcular ponderacion de preguntas"); 
+        if(select==11) 
+            printf("\n>> procesar encuesta"); 
         else 
-            printf("\n   calcular ponderacion de preguntas");
+            printf("\n   procesar encuesta");
+        if(select==12){
+			printf("\n>> mostrar encuestas respondidas(arbol)");
+		}else
+			printf("\n   mostrar encuestas respondidas(arbol)");
         if(select==13){
-		printf("\n>> mostrar encuestas respondidas(arbol)");
-	}else
-		printf("\n   mostrar encuestas respondidas(arbol)");
-	if(select==14) 
-            printf("\n>> buscar encuesta respondida por id"); 
-        else 
-            printf("\n   buscar encuesta respondida por id");
-        if(select==15){
-		printf("\n>> salir");
-	}else
-		printf("\n   salir");
+			printf("\n>> salir");
+		}else
+			printf("\n   salir");
 
         w=getch();
         if(w=='w' || w==72 )
@@ -304,66 +328,53 @@ int main(){
             }
             if(select==5){
                 system("cls");
-                imprimirPreguntas(LP);
-                getch();
+                crearPregunta(&LP);
             }
             if(select==6){
-                system("cls");
-                crearPregunta(&LP);
-                getch();
-            }
-            if(select==7){
                 system("cls");
                 printf("ingrese un id de pregunta para modificar una pregunta: ");
                 scanf("%i",&id);
                 modificarPregunta(LP,id);
                 getch();
             }
-            if(select==8){
+            if(select==7){
                 system("cls");
                 printf("Ingrese ID de encuesta a eliminar: ");
                 scanf("%d", &id);
                 eliminarEncuesta(&tp, id);
                 getch();
             }
-            if(select==9){
+            if(select==8){
                 system("cls");
                 crearEncuesta(&tp);
                 getch();
             }
-            if(select==10){
+            if(select==9){
                 system("cls");
                 mostrarEncuestas(&tp);
                 getch();
             }
-            if(select==11){
+            if(select==10){
                 system("cls");
                 printf("Ingrese ID de encuesta a modificar: ");
                 scanf("%d", &id);
                 modificarEncuesta(&tp, id);
                 getch();
             }
-            if(select==12){
+            if(select==11){
                 system("cls");
+                //procesar encuesta
+                printf("Ingrese ID de encuesta a procesar: ");
+                scanf("%d", &id);
+                procesarEncuesta(&tpRespondida, &LPponder, &tp, id, &LP, &L2, &A);
                 getch();
             }
-            if(select==13){
+            if(select==12){
                 system("cls");
                 imprimirArbol(A);
                 getch();
             }
-	    if(select==14){
-                system("cls");
-    		printf("Ingrese el ID de la encuesta respondida a mostrar: ");
-    		scanf("%d", &id);
-    		int encontrado = 0;
-    		MostrarEncuestasRespondidas(A, LP, L2, id, &encontrado);
-    		if (!encontrado) {
-        		printf("\nNo se encontró ninguna encuesta respondida con ese ID.\n");
-    		}
-    		getch();
-            }
-            if(select==15){
+            if(select==13){
                 apagado++;
             }
         }
@@ -480,13 +491,11 @@ struct lRespuesta *mostrarListaRespuesta(struct lRespuesta **L){
     }
     return (*L);
 }
-
 //funciones arbol_respondidas
 struct arbol_respondidas *insertarA(struct arbol_respondidas **A, struct arbol_respondidas **nodo) {
     if ((*A) != NULL) {
-        if ((*A)->Encuesta_Id == (*nodo)->Encuesta_Id) {
-            printf("Ya esta en el arbol_respondidas\n");
-        } else if ((*nodo)->Encuesta_Id < (*A)->Encuesta_Id) {
+        // Elegir aleatoriamente izquierda o derecha
+        if (rand() % 2 == 0) {
             (*A)->izq = insertarA(&(*A)->izq, nodo);
         } else {
             (*A)->der = insertarA(&(*A)->der, nodo);
@@ -570,18 +579,14 @@ void crearEncuesta(struct pEncuesta **tp) {
     struct pEncuesta *nueva = NULL;
     if (nuevoP(&nueva)) {
         int c;
-        int maxIdMem = 0, maxIdCSV = 0;
-        // Buscar el máximo ID en memoria
-        if(*tp != NULL){
-            maxIdMem = buscarUltimoIdEncuesta(tp);
-        }
-        // Buscar el máximo ID en el archivo CSV
-        maxIdCSV = buscarMaxIdEncuestaCSV("encuestas.csv");
-        // Asignar el ID mayor + 1
-        int nuevoId = (maxIdMem > maxIdCSV ? maxIdMem : maxIdCSV) + 1;
-        nueva->Encuesta_id = nuevoId;
-
+        
+        // asignar ID automáticamente
+        if(*tp == NULL){
+            nueva->Encuesta_id = 1;
+        }else
+        nueva->Encuesta_id = buscarUltimoIdEncuesta(tp) + 1;    
         while ((c = getchar()) != '\n' && c != EOF); // limpiar buffer
+        // solicitar datos de la encuesta
         printf("Ingrese denominación de la encuesta: ");
         fgets(nueva->Denominacion, sizeof(nueva->Denominacion), stdin);
         nueva->Denominacion[strcspn(nueva->Denominacion, "\n")] = 0;
@@ -636,17 +641,6 @@ int buscarUltimoIdEncuesta(struct pEncuesta **tp) {
     id = nodo->Encuesta_id;
     apilar(&nodo,tp);
     return id;
-}
-int buscarMaxIdEncuestaCSV(const char *Encuestas) {
-    FILE *archivo = fopen(Encuestas, "r");
-    if (!archivo) return 0;
-    int maxId = 0, id, mes, anio, procesada;
-    char denominacion[100];
-    while (fscanf(archivo, "%d;%[^;];%d;%d;%d\n", &id, denominacion, &mes, &anio, &procesada) == 5) {
-        if (id > maxId) maxId = id;
-    }
-    fclose(archivo);
-    return maxId;
 }
 void modificarEncuesta(struct pEncuesta **tp, int id) {
     struct pEncuesta *nodo = NULL, *aux = NULL;
@@ -802,18 +796,6 @@ void eliminarpreguntasDeEncuesta(struct lPregunta **L, struct lRespuesta **L2, i
         }
     }
     printf("Preguntas de la encuesta %d eliminadas.\n", Encuesta_Id);
-}
-void imprimirPreguntas(struct lPregunta *L) {
-    if (L == NULL) {
-        printf("No hay preguntas registradas.\n");
-        return;
-    }
-    printf("=== Lista de preguntas ===\n");
-    while (L != NULL) {
-        printf("Encuesta ID: %d | Pregunta ID: %d | Texto: %s | Ponderación: %.2f\n",
-               L->Encuesta_Id, L->Pregunta_Id, L->Pregunta, L->Ponderacion);
-        L = L->sgte;
-    }
 }
 //CRUD respuestas
 void crearRespuesta(struct lRespuesta **L) {
@@ -1167,57 +1149,321 @@ void verificarPonderacionPreguntas(struct lPregunta **L,struct lRespuesta **L2) 
     }
     // si  no hago esto no se evalua la ultima encuesta
     if (id_aux != -1) {
-	printf("la encuesta %d tiene %.2f de ponderacion\n ", id_aux, suma);
-	if (suma == 1) {
-	    printf("ponderacion correcta\n");
-	}else{
-	    printf("la preguntas de la encuesta %d no tienen una ponderacion correcta, se eliminan\n", id_aux);
-	    eliminarpreguntasDeEncuesta(L,L2, id_aux);
-	}
+        printf("la encuesta %d tiene %.2f de ponderacion\n ", id_aux, suma);
+        if (suma == 1) {
+            printf("ponderacion correcta\n");
+        }else{
+            printf("la preguntas de la encuesta %d no tienen una ponderacion correcta, se eliminan\n", id_aux);
+            eliminarpreguntasDeEncuesta(L,L2, id_aux);
+        }
     }
 }
 
 void imprimirArbol(struct arbol_respondidas *raiz) {
     if (raiz != NULL) {
         imprimirArbol(raiz->izq);
-        printf("Encuesta ID: %d, Pregunta ID: %d, Respuesta ID: %d, Fecha: %04d-%02d-%02d\n",
-               raiz->Encuesta_Id, raiz->Pregunta_Id, raiz->Respuesta_Id,
-               raiz->Anio, raiz->Encuesta_Mes, raiz->dia);
+        printf("Encuesta ID: %d | Pregunta ID: %d | Respuesta ID: %d | Fecha: %02d/%02d/%04d\n - Encuestador ID: %d | Encuesta Respondida ID: %d\n\n",
+               raiz->Encuesta_Id,
+               raiz->Pregunta_Id,
+               raiz->Respuesta_Id,
+               raiz->dia,
+               raiz->Encuesta_Mes,
+               raiz->Anio,
+               raiz->Encuestador_id,
+               raiz->EncuestaRespondida_Id);
         imprimirArbol(raiz->der);
     }
 }
-void MostrarEncuestasRespondidas(struct arbol_respondidas *A, struct lPregunta *preguntas, struct lRespuesta *respuestas, int encuestaRespondidaId, int *encontrado) {
-	if (A == NULL) {
-    		return;	
-	}
-    //recorro el arbol a la izquierda
-    MostrarEncuestasRespondidas(A->izq, preguntas, respuestas, encuestaRespondidaId, encontrado);
-    //evaluo los ids 
-    if (A->EncuestaRespondida_Id == encuestaRespondidaId) {
-    	*encontrado = 1;
-        //recorro la lista de preguntas
-        struct lPregunta *p = preguntas;
-        while (p != NULL) {
-            if (p->Pregunta_Id == A->Pregunta_Id) {
-                printf("\nPregunta: %s (Pond: %.2f)\n", p->Pregunta, p->Ponderacion);
-                //si encuentra una pregunta, sale del bucle para mostrar las respuestas y despues vuelve
-                break;
-            }
-            p = p->sgte;
+
+//preocesar encuestas
+
+int nuevoLPreguntaPonderacion(struct lPponderaciones **nodo) {
+    *nodo = (struct lPponderaciones *) malloc(sizeof(struct lPponderaciones));
+    return (*nodo == NULL) ? 0 : 1;
+}
+struct lPponderaciones *insertarLPreguntaPonderacion(struct lPponderaciones **nodo, struct lPponderaciones **L) {
+    if((*L)!=NULL){
+        if((*nodo)->Pregunta_Id < (*L)->Pregunta_Id){
+            (*nodo)->sgte=(*L);
+            (*L)=(*nodo);
+        }else
+        (*L)->sgte = insertarLPreguntaPonderacion(nodo,&(*L)->sgte);
+    }else{
+        (*L)=(*nodo);
+    }
+    return (*L);
+}
+void buscarLPreguntaPonderacion(struct lPponderaciones **L, int Pregunta_Id, struct lPponderaciones **nodo) {
+    if ((*L) != NULL) {
+        if ((*L)->Pregunta_Id == Pregunta_Id) {
+            (*nodo) = (*L);
+        } else {
+            buscarLPreguntaPonderacion(&(*L)->sgte, Pregunta_Id, nodo);
         }
-        //muestro las respuestas asociadas a la pregunta y marco con 1 la elegida del arbol
-        struct lRespuesta *r = respuestas;
-        while (r != NULL) {
-            if (r->Pregunta_Id == A->Pregunta_Id) {
-                if (r->Respuesta_Id == A->Respuesta_Id) {
-                    printf(" [1] ID %d: %s (%.2f)\n", r->Respuesta_Id, r->Respuesta, r->Ponderacion);
-                } else {
-                    printf(" [0] ID %d: %s (%.2f)\n", r->Respuesta_Id, r->Respuesta, r->Ponderacion);
+    } else {
+        (*nodo) = NULL;
+    }
+}
+void procesarEncuesta(struct pilaRespondida **tpRespondida,struct lPponderaciones **LPponder,struct pEncuesta **tp, int Encuesta_Id, struct lPregunta **LP, struct lRespuesta **L2, struct arbol_respondidas **A){
+    struct pEncuesta *nodoP = NULL, *auxP = NULL;
+    int existeEncuesta = 0, procesada = 0;;
+
+    //recorrer la pila de encuestas buscando la encuesta por id
+    while(!vaciaP(*tp)){
+        desapilar(&nodoP,tp);
+        if(nodoP->Encuesta_id == Encuesta_Id){
+            existeEncuesta = 1;
+            if(nodoP->Procesada == 1){
+                //si la encuesta ya fue procesada
+                printf("La encuesta %d ya ha sido procesada.\n", Encuesta_Id);
+                procesada = 1;
+            }else{
+                //mostrar datos de la encuesta
+                printf("Procesando encuesta con ID %d...\n", Encuesta_Id);
+                printf("Denominación: %s\n", nodoP->Denominacion);
+                printf("Fecha: %02d/%d\n", nodoP->Encuesta_Mes, nodoP->Anio);
+            }
+        }
+        apilar(&nodoP,&auxP);
+    }
+    while(!vaciaP(auxP)){
+        desapilar(&nodoP,&auxP);
+        apilar(&nodoP,tp);
+    }
+    if(existeEncuesta == 0 || procesada == 1){
+        printf("Encuesta con ID %d no encontrada o ya preocesada.\n", Encuesta_Id);
+        getch();
+        return;
+    }
+    //carga de los nodos de encuesta en la pila
+    filtrarRespondidas(A, Encuesta_Id, tpRespondida);
+    //tenemos solo los datos de las respuestas respondidas de la encuesta
+
+    struct pilaRespondida *nodoR = NULL, *tpRespondidaAux = NULL;
+    while(!vaciaPilaRespondida(*tpRespondida)){
+        desapilarRespondida(tpRespondida, &nodoR);
+        //procesar la encuesta
+        struct lPregunta *preguntaActual = *LP;
+        while (preguntaActual != NULL) {
+            if (preguntaActual->Encuesta_Id == Encuesta_Id && 
+                preguntaActual->Pregunta_Id == nodoR->Pregunta_Id) {
+                //mostrar datos de la pregunta
+                printf("\n=== Pregunta ===\n");
+                printf("Pregunta ID: %d\n", preguntaActual->Pregunta_Id);
+                printf("Texto: %s\n", preguntaActual->Pregunta);
+                printf("Ponderación: %.2f\n", preguntaActual->Ponderacion);
+
+                //recorrer la lista de respuestas
+                struct lRespuesta *respuestaActual = *L2;
+                while (respuestaActual != NULL) {
+                    if (respuestaActual->Pregunta_Id == preguntaActual->Pregunta_Id &&
+                        respuestaActual->Respuesta_Id == nodoR->Respuesta_Id) {
+                        //mostrar datos de las respuesta
+                        printf("Respuesta ID: %d | Nro: %d | Texto: %s | Ponderación: %.2f | Elegida: %s\n",
+                               respuestaActual->Respuesta_Id,
+                               respuestaActual->Respuesta_Nro,
+                               respuestaActual->Respuesta,
+                               respuestaActual->Ponderacion,
+                               respuestaActual->Elegida ? "Sí" : "No");
+
+                        respuestaActual->Elegida = 1; // ya que fue elegida
+                        
+                        //acumulamos la ponderacion de la pregunta
+                        struct lPponderaciones *nodoPonderacion = NULL;
+                        if (nuevoLPreguntaPonderacion(&nodoPonderacion)) {
+                            nodoPonderacion->Pregunta_Id = preguntaActual->Pregunta_Id;
+                            //los datos se cargan siguiendo el indice de ponderacion de la pregunta
+                            nodoPonderacion->Ponderacion_Total = preguntaActual->Ponderacion * respuestaActual->Ponderacion;
+                            nodoPonderacion->sgte = NULL;
+
+                            //insertar en la lista de ponderaciones
+                            insertarLPreguntaPonderacion(&nodoPonderacion, LPponder);
+                        } else {
+                            printf("Error al reservar memoria para la ponderación de la pregunta.\n");
+                        }
+                    }
+                    //recorrer la lista de respuestas
+                    respuestaActual = respuestaActual->sgte;
                 }
             }
-            r = r->sgte;
+            //avanzar a la siguiente pregunta
+            preguntaActual = preguntaActual->sgte;
         }
+
+        apilarRespondida(&nodoR, &tpRespondidaAux);   
     }
-    //recorro por la derecha
-    MostrarEncuestasRespondidas(A->der, preguntas, respuestas, encuestaRespondidaId, encontrado);
+    //devolver la pila a su estado original
+    while(!vaciaPilaRespondida(tpRespondidaAux)){
+        desapilarRespondida(&tpRespondidaAux, &nodoR);
+        apilarRespondida(&nodoR, tpRespondida);
+    }
+    //mostrar las ponderaciones de las preguntas y luego sumarlas
+    struct lPponderaciones *ListaFinal = NULL;
+    acumularListaPonderaciones(LPponder, &ListaFinal);
+    printf("\n=== Ponderaciones de las preguntas procesadas ===\n");
+    mostrarPonderaciones(&ListaFinal);
+    //marcar la encuesta como procesada
+    while(!vaciaP(*tp)){
+        desapilar(&nodoP,tp);
+        if(nodoP->Encuesta_id == Encuesta_Id){
+            nodoP->Procesada = 1; //marcar como procesada
+            printf("Encuesta con ID %d ha sido procesada.\n", Encuesta_Id);
+            sumarPonderacionesEncuesta(Encuesta_Id, &ListaFinal);
+        }
+        apilar(&nodoP,&auxP);
+    }
+    while(!vaciaP(auxP)){
+        desapilar(&nodoP,&auxP);
+        apilar(&nodoP,tp);
+    }
+
+}
+void apilarRespondida(struct pilaRespondida **nodo, struct pilaRespondida **tope) {
+    if (*tope == NULL) {
+        *tope = *nodo;
+    } else {
+        (*nodo)->sgte = *tope;
+        *tope = *nodo;
+    }
+}
+int nuevoNodoPilaRespondida(struct pilaRespondida **nodo) {
+    *nodo = (struct pilaRespondida *) malloc(sizeof(struct pilaRespondida));
+    return (*nodo == NULL) ? 0 : 1;
+}
+void desapilarRespondida(struct pilaRespondida **tope, struct pilaRespondida **nodo) {
+    if (*tope != NULL) {
+        *nodo = *tope;
+        *tope = (*tope)->sgte;
+        (*nodo)->sgte = NULL; // Desconectar el nodo desapilado
+    } else {
+        *nodo = NULL; // Si la pila está vacía, asignar NULL al nodo
+    }
+}
+int vaciaPilaRespondida(struct pilaRespondida *tp) {
+    int band = 0;
+	if (tp == NULL){
+		band = 1;
+	}
+	return band;
+}
+void mostrarPilaRespondida(struct pilaRespondida **tope) {
+    struct pilaRespondida *aux=NULL, *nodo=NULL;
+    while (!vaciaPilaRespondida(*tope)) {
+        desapilarRespondida(tope, &nodo);
+        printf("Encuesta_Id: %d, Pregunta_Id: %d, Respuesta_Id: %d, Anio: %d, Mes: %d, Encuestador_id: %d, Respondida_Id: %d, Dia: %d\n",
+               nodo->Encuesta_Id,
+               nodo->Pregunta_Id,
+               nodo->Respuesta_Id,
+               nodo->Anio,
+               nodo->Encuesta_Mes,
+               nodo->Encuestador_id,
+               nodo->EncuestaRespondida_Id,
+               nodo->dia);
+        apilarRespondida(&nodo, &aux); // Guardar el nodo en un auxiliar para restaurar la pila
+    }
+    // Restaurar la pila original
+    while (!vaciaPilaRespondida(aux)) {
+        desapilarRespondida(&aux, &nodo);
+        apilarRespondida(&nodo, tope);
+    }
+}
+void filtrarRespondidas(struct arbol_respondidas **A, int Encuesta_Id, struct pilaRespondida **tope){
+
+    if((*A) != NULL){
+        
+        if((*A)->Encuesta_Id == Encuesta_Id){
+            struct pilaRespondida *nodoPilaRespondida;
+            if (nuevoNodoPilaRespondida(&nodoPilaRespondida)){    
+                nodoPilaRespondida->Encuesta_Id = (*A)->Encuesta_Id;
+                nodoPilaRespondida->Pregunta_Id = (*A)->Pregunta_Id;
+                nodoPilaRespondida->Respuesta_Id = (*A)->Respuesta_Id;
+                nodoPilaRespondida->Anio = (*A)->Anio;
+                nodoPilaRespondida->Encuesta_Mes = (*A)->Encuesta_Mes;
+                nodoPilaRespondida->Encuestador_id = (*A)->Encuestador_id;
+                nodoPilaRespondida->EncuestaRespondida_Id = (*A)->EncuestaRespondida_Id;
+                nodoPilaRespondida->dia = (*A)->dia;
+                nodoPilaRespondida->sgte = NULL;      
+                apilarRespondida(&nodoPilaRespondida, tope);
+            }
+        }
+    
+        filtrarRespondidas(&(*A)->izq, Encuesta_Id, tope);
+        filtrarRespondidas(&(*A)->der, Encuesta_Id, tope);
+    }
+}
+int vaciaLP(struct lPponderaciones *L) {
+    return (L == NULL);
+}
+void desapilarLP(struct lPponderaciones **nodo, struct lPponderaciones **L) {
+    if (*L != NULL) {
+        *nodo = *L;
+        *L = (*L)->sgte;
+        (*nodo)->sgte = NULL; // Desconectar el nodo desapilado
+    } else {
+        *nodo = NULL; // Si la lista está vacía, asignar NULL al nodo
+    }
+}
+void apilarLP(struct lPponderaciones **nodo, struct lPponderaciones **L) {
+    if (*L == NULL) {
+        *L = *nodo;
+    } else {
+        (*nodo)->sgte = *L;
+        *L = *nodo;
+    }
+}
+void acumularListaPonderaciones(struct lPponderaciones **L, struct lPponderaciones **ListaFinal) {
+    struct lPponderaciones *nodo = NULL, *encontrado = NULL;
+    while (!vaciaLP(*L)) {
+        desapilarLP(&nodo, L);
+        buscarLPreguntaPonderacion(ListaFinal, nodo->Pregunta_Id, &encontrado);
+        if (encontrado == NULL) {
+            // Crear nuevo nodo y agregarlo a la lista final
+            struct lPponderaciones *nuevo = NULL;
+            if (nuevoLPreguntaPonderacion(&nuevo)) {
+                nuevo->Encuesta_Id = nodo->Encuesta_Id;
+                nuevo->Pregunta_Id = nodo->Pregunta_Id;
+                nuevo->Ponderacion_Total = nodo->Ponderacion_Total;
+                nuevo->sgte = NULL;
+                insertarLPreguntaPonderacion(&nuevo, ListaFinal);
+            } else {
+                printf("Error al reservar memoria para la ponderación de la pregunta.\n");
+                free(nodo);
+                return;
+            }
+        } else {
+            // Acumular ponderación
+            encontrado->Ponderacion_Total += nodo->Ponderacion_Total;
+        }
+        free(nodo);
+    }
+}
+void sumarPonderacionesEncuesta(int Encuesta_Id, struct lPponderaciones **L) {
+    struct lPponderaciones *nodo = NULL, *aux = NULL;
+    float suma = 0.0;
+    while (!vaciaLP(*L)) {
+        desapilarLP(&nodo, L);
+        suma += nodo->Ponderacion_Total;
+        apilarLP(&nodo, &aux);
+    }
+    // Restaurar la lista original
+    while (!vaciaLP(aux)) {
+        desapilarLP(&nodo, &aux);
+        apilarLP(&nodo, L);
+    }
+    printf("La suma de las ponderaciones para la encuesta %d es: %.2f\n", Encuesta_Id, suma);
+}
+void mostrarPonderaciones(struct lPponderaciones **L) {
+    struct lPponderaciones *nodo = NULL, *aux = NULL;
+    while (!vaciaLP(*L)) {
+        desapilarLP(&nodo, L);
+        printf("Pregunta ID: %d, Ponderación Total de la pregunta: %.2f\n",
+               nodo->Pregunta_Id,
+               nodo->Ponderacion_Total);
+        apilarLP(&nodo, &aux);
+    }
+    // Restaurar la lista original
+    while (!vaciaLP(aux)) {
+        desapilarLP(&nodo, &aux);
+        apilarLP(&nodo, L);
+    }
 }
