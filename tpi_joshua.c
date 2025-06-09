@@ -96,6 +96,7 @@ void buscarA(int dato, struct arbol_respondidas *r);
 void busBorrA(struct arbol_respondidas **r, int dato);
 void borrarNodoA(struct arbol_respondidas **nodo);
 struct arbol_respondidas *eliminarA(struct arbol_respondidas **r);
+void imprimirArbol(struct arbol_respondidas *r);
 
 //funciones esteticas
 void colorMenu(){ 
@@ -185,7 +186,7 @@ int main(){
     colorMenu();
 	int apagado=0;
 	char w=1;
-	int select=1,tam=12;
+int select=1,tam=13;
     printf("verificando ponderacion de preguntas...\n");
     verificarPonderacionPreguntas(&LP,&L2);
     getch();
@@ -242,6 +243,10 @@ int main(){
         else 
             printf("\n   calcular ponderacion de preguntas");
         if(select==12){
+			printf("\n>> mostrar encuestas respondidas(arbol)");
+		}else
+			printf("\n   mostrar encuestas respondidas(arbol)");
+        if(select==13){
 			printf("\n>> salir");
 		}else
 			printf("\n   salir");
@@ -324,8 +329,12 @@ int main(){
                 system("cls");
                 getch();
             }
-            
             if(select==12){
+                system("cls");
+                imprimirArbol(A);
+                getch();
+            }
+            if(select==13){
                 apagado++;
             }
         }
@@ -1112,3 +1121,12 @@ void verificarPonderacionPreguntas(struct lPregunta **L,struct lRespuesta **L2) 
     }
 }
 
+void imprimirArbol(struct arbol_respondidas *raiz) {
+    if (raiz != NULL) {
+        imprimirArbol(raiz->izq);
+        printf("Encuesta ID: %d, Pregunta ID: %d, Respuesta ID: %d, Fecha: %04d-%02d-%02d\n",
+               raiz->Encuesta_Id, raiz->Pregunta_Id, raiz->Respuesta_Id,
+               raiz->Anio, raiz->Encuesta_Mes, raiz->dia);
+        imprimirArbol(raiz->der);
+    }
+}
