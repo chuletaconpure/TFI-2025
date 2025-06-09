@@ -97,6 +97,8 @@ void busBorrA(struct arbol_respondidas **r, int dato);
 void borrarNodoA(struct arbol_respondidas **nodo);
 struct arbol_respondidas *eliminarA(struct arbol_respondidas **r);
 void imprimirArbol(struct arbol_respondidas *r);
+void MostrarEncuestasRespondidas(struct arbol_respondidas *A, struct lPregunta *preguntas, struct lRespuesta *respuestas, int encuestaRespondidaId, int *encontrado);
+
 
 //funciones esteticas
 void colorMenu(){ 
@@ -188,7 +190,7 @@ int main(){
     colorMenu();
 	int apagado=0;
 	char w=1;
-	int select=1,tam=14;
+	int select=1,tam=15;
     printf("verificando ponderacion de preguntas...\n");
     verificarPonderacionPreguntas(&LP,&L2);
     getch();
@@ -249,13 +251,17 @@ int main(){
         else 
             printf("\n   calcular ponderacion de preguntas");
         if(select==13){
-			printf("\n>> mostrar encuestas respondidas(arbol)");
-		}else
-			printf("\n   mostrar encuestas respondidas(arbol)");
-        if(select==14){
-			printf("\n>> salir");
-		}else
-			printf("\n   salir");
+		printf("\n>> mostrar encuestas respondidas(arbol)");
+	}else
+		printf("\n   mostrar encuestas respondidas(arbol)");
+	if(select==14) 
+            printf("\n>> buscar encuesta respondida por id"); 
+        else 
+            printf("\n   buscar encuesta respondida por id");
+        if(select==15){
+		printf("\n>> salir");
+	}else
+		printf("\n   salir");
 
         w=getch();
         if(w=='w' || w==72 )
@@ -346,7 +352,18 @@ int main(){
                 imprimirArbol(A);
                 getch();
             }
-            if(select==14){
+	    if(select==14){
+                system("cls");
+    		printf("Ingrese el ID de la encuesta respondida a mostrar: ");
+    		scanf("%d", &id);
+    		int encontrado = 0;
+    		MostrarEncuestasRespondidas(A, LP, L2, id, &encontrado);
+    		if (!encontrado) {
+        		printf("\nNo se encontró ninguna encuesta respondida con ese ID.\n");
+    		}
+    		getch();
+            }
+            if(select==15){
                 apagado++;
             }
         }
@@ -1168,4 +1185,39 @@ void imprimirArbol(struct arbol_respondidas *raiz) {
                raiz->Anio, raiz->Encuesta_Mes, raiz->dia);
         imprimirArbol(raiz->der);
     }
+}
+void MostrarEncuestasRespondidas(struct arbol_respondidas *A, struct lPregunta *preguntas, struct lRespuesta *respuestas, int encuestaRespondidaId, int *encontrado) {
+	if (A == NULL) {
+    		return;	
+	}
+    //recorro el arbol a la izquierda
+    MostrarEncuestasRespondidas(A->izq, preguntas, respuestas, encuestaRespondidaId, encontrado);
+    //evaluo los ids 
+    if (A->EncuestaRespondida_Id == encuestaRespondidaId) {
+    	*encontrado = 1;
+        //recorro la lista de preguntas
+        struct lPregunta *p = preguntas;
+        while (p != NULL) {
+            if (p->Pregunta_Id == A->Pregunta_Id) {
+                printf("\nPregunta: %s (Pond: %.2f)\n", p->Pregunta, p->Ponderacion);
+                //si encuentra una pregunta, sale del bucle para mostrar las respuestas y despues vuelve
+                break;
+            }
+            p = p->sgte;
+        }
+        //muestro las respuestas asociadas a la pregunta y marco con 1 la elegida del arbol
+        struct lRespuesta *r = respuestas;
+        while (r != NULL) {
+            if (r->Pregunta_Id == A->Pregunta_Id) {
+                if (r->Respuesta_Id == A->Respuesta_Id) {
+                    printf(" [1] ID %d: %s (%.2f)\n", r->Respuesta_Id, r->Respuesta, r->Ponderacion);
+                } else {
+                    printf(" [0] ID %d: %s (%.2f)\n", r->Respuesta_Id, r->Respuesta, r->Ponderacion);
+                }
+            }
+            r = r->sgte;
+        }
+    }
+    //recorro por la derecha
+    MostrarEncuestasRespondidas(A->der, preguntas, respuestas, encuestaRespondidaId, encontrado);
 }
