@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <conio.h>
@@ -219,7 +220,7 @@ int main(){
     extraer_encuestas_csv(&tp);
     extraer_arbol_csv(&A, "Encuestas_Respondidas.csv");
 
-    int id;
+    long long id;
     //funcion system para permitir mas caracteres y caracteres especiales
     system("chcp 65001");
     colorMenu();
@@ -238,65 +239,80 @@ int main(){
         //verifica que las preguntas tengan una ponderacion correcta, si no la tienen se eliminan
         //menu visual para seleccionar una opcion
 		if(select==1){
-			printf("\n>> crear respuesta");
-		}else
-			printf("\n   crear respuesta");
-        if(select==2){
-			printf("\n>> mostrar respuestas por pregunta");
-		}else
-			printf("\n   mostrar respuestas por pregunta");
-        if(select==3){
-			printf("\n>> modificar respuesta");
-		}else
-			printf("\n   modificar respuesta");
-        if(select==4){
-			printf("\n>> eliminar respuestas de una pregunta");
-		}else
-			printf("\n   eliminar respuestas de una pregunta");
-		if(select==5){
-			printf("\n>> crear pregunta");
-		}else
-			printf("\n   crear pregunta");
-        if(select==6){
-			printf("\n>> mostrar preguntas");
-		}else
-			printf("\n   mostrar preguntas");
-        if(select==7){
-			printf("\n>> modificar pregunta");
-		}else
-			printf("\n   modificar pregunta");
-		if(select==8) 
-            printf("\n>> eliminar encuesta"); 
-        else 
-            printf("\n   eliminar encuesta");
-        if(select==9)
-            printf("\n>> crear encuesta"); 
-        else 
-            printf("\n   crear encuesta");
-        if(select==10) 
-            printf("\n>> mostrar encuestas"); 
-        else 
-            printf("\n   mostrar encuestas");
-        if(select==11) 
-            printf("\n>> modificar encuesta"); 
-        else 
-            printf("\n   modificar encuesta");
-        if(select==12) 
-            printf("\n>> procesar encuesta"); 
-        else 
+            printf("\n>> procesar encuesta");
+        }else
             printf("\n   procesar encuesta");
-        if(select==13){
-			printf("\n>> mostrar encuestas respondidas(arbol)");
-		}else
-			printf("\n   mostrar encuestas respondidas(arbol)");
-        if(select==14) 
-            printf("\n>> buscar encuesta respondida por id"); 
-        else 
+
+        if(select==2){
+            printf("\n>> crear encuesta");
+        }else
+            printf("\n   crear encuesta");
+
+        if(select==3){
+            printf("\n>> crear pregunta");
+        }else
+            printf("\n   crear pregunta");
+
+        if(select==4){
+            printf("\n>> crear respuesta");
+        }else
+            printf("\n   crear respuesta");
+
+        if(select==5){
+            printf("\n>> eliminar encuesta");
+        }else
+            printf("\n   eliminar encuesta");
+
+        if(select==6){
+            printf("\n>> eliminar respuestas de una pregunta");
+        }else
+            printf("\n   eliminar respuestas de una pregunta");
+
+        if(select==7){
+            printf("\n>> mostrar encuestas");
+        }else
+            printf("\n   mostrar encuestas");
+
+        if(select==8){
+            printf("\n>> mostrar preguntas");
+        }else
+            printf("\n   mostrar preguntas");
+
+        if(select==9){
+            printf("\n>> mostrar respuestas por pregunta");
+        }else
+            printf("\n   mostrar respuestas por pregunta");
+
+        if(select==10){
+            printf("\n>> mostrar encuestas respondidas(arbol)");
+        }else
+            printf("\n   mostrar encuestas respondidas(arbol)");
+
+        if(select==11){
+            printf("\n>> buscar encuesta respondida por id");
+        }else
             printf("\n   buscar encuesta respondida por id");
+
+        if(select==12){
+            printf("\n>> modificar encuesta");
+        }else
+            printf("\n   modificar encuesta");
+
+        if(select==13){
+            printf("\n>> modificar pregunta");
+        }else
+            printf("\n   modificar pregunta");
+
+        if(select==14){
+            printf("\n>> modificar respuesta");
+        }else
+            printf("\n   modificar respuesta");
+
         if(select==15){
-			printf("\n>> salir");
-		}else
-			printf("\n   salir");
+            printf("\n>> salir");
+        }else
+            printf("\n   salir");
+
 
         w=getch();
         if(w=='w' || w==72 )
@@ -314,92 +330,91 @@ int main(){
         if(w==13){
             if(select==1){
                 system("cls");
-                crearRespuesta(&L2);
+                printf("Ingrese ID de encuesta a procesar: ");
+                scanf("%d", &id);
+                procesarEncuesta(&tpRespondida, &LPponder, &tp, id, &LP, &L2, &A);
+                getch();
             }
             if(select==2){
                 system("cls");
-                printf("ingrese un id de preguntas para mostrar sus respuesta: ");
-                scanf("%i",&id);
-                mostrarRespuestasPorPregunta(L2,LP,id);
+                crearEncuesta(&tp);
                 getch();
             }
             if(select==3){
                 system("cls");
-                printf("ingrese un id de respuestas para modificar una respuesta: ");
-                scanf("%i",&id);
-                modificarRespuesta(L2,id);
-                getch();
+                crearPregunta(&LP);
             }
             if(select==4){
                 system("cls");
-                printf("ingrese un id de preguntasa para eliminar sus respuesta: ");
-                scanf("%i",&id);
-                eliminarRespuestasDePregunta(&L2,id);
-                getch();
+                crearRespuesta(&L2);
             }
             if(select==5){
-                system("cls");
-                crearPregunta(&LP);
-            }
-            if(select==6){
-                system("cls");
-                imprimirPreguntas(LP);
-                getch();
-            }
-            if(select==7){
-                system("cls");
-                printf("ingrese un id de pregunta para modificar una pregunta: ");
-                scanf("%i",&id);
-                modificarPregunta(LP,id);
-                getch();
-            }
-            if(select==8){
                 system("cls");
                 printf("Ingrese ID de encuesta a eliminar: ");
                 scanf("%d", &id);
                 eliminarEncuesta(&tp, id);
                 getch();
             }
-            if(select==9){
+            if(select==6){
                 system("cls");
-                crearEncuesta(&tp);
+                printf("Ingrese ID de la pregunta para eliminar sus respuestas: ");
+                scanf("%i",&id);
+                eliminarRespuestasDePregunta(&L2,id);
                 getch();
             }
-            if(select==10){
+            if(select==7){
                 system("cls");
                 mostrarEncuestas(&tp);
                 getch();
             }
+            if(select==8){
+                system("cls");
+                imprimirPreguntas(LP);
+                getch();
+            }
+            if(select==9){
+                system("cls");
+                printf("Ingrese ID de pregunta para mostrar sus respuestas: ");
+                scanf("%i",&id);
+                mostrarRespuestasPorPregunta(L2,LP,id);
+                getch();
+            }
+            if(select==10){
+                system("cls");
+                imprimirArbol(A);
+                getch();
+            }
             if(select==11){
+                system("cls");
+                printf("Ingrese ID de encuesta respondida: ");
+                scanf("%lld", &id);
+                int encontrado = 0;
+                MostrarEncuestasRespondidas(A, LP, L2, id, &encontrado);
+                if (!encontrado) {
+                    printf("\nNo se encontró ninguna encuesta respondida con ese ID.\n");
+                }
+                getch();
+            }
+            if(select==12){
                 system("cls");
                 printf("Ingrese ID de encuesta a modificar: ");
                 scanf("%d", &id);
                 modificarEncuesta(&tp, id);
                 getch();
             }
-            if(select==12){
-                system("cls");
-                //procesar encuesta
-                printf("Ingrese ID de encuesta a procesar: ");
-                scanf("%d", &id);
-                procesarEncuesta(&tpRespondida, &LPponder, &tp, id, &LP, &L2, &A);
-                getch();
-            }
             if(select==13){
                 system("cls");
-                imprimirArbol(A);
+                printf("Ingrese ID de pregunta a modificar: ");
+                scanf("%i", &id);
+                modificarPregunta(LP, id);
                 getch();
             }
-             if(select==14){
+            if(select==14){
                 system("cls");
-    		    printf("Ingrese el ID de la encuesta respondida a mostrar: ");
-    		    scanf("%d", &id);
-    		    int encontrado = 0;
-    		    MostrarEncuestasRespondidas(A, LP, L2, id, &encontrado);
-    		    if (!encontrado) {
-        		printf("\nNo se encontró ninguna encuesta respondida con ese ID.\n");
-    		}
-    		getch();
+                printf("Ingrese ID de respuesta a modificar: ");
+                scanf("%i", &id);
+                modificarRespuesta(L2, id);
+                getch();
             }
             if(select==15){
                 apagado++;
@@ -1167,12 +1182,12 @@ void extraer_arbol_csv(struct arbol_respondidas **A, const char *Encuestas_Respo
             continue;
         }
 
-        char str_fecha[9] = {0};  
-        char encuesta_id[7] = {0};
-        char pregunta_id[9] = {0};
-        char respuesta_id[13] = {0};
-        char encuestador_id[5] = {0};
-        char enc_resp_id[13] = {0};
+        char str_fecha[9] = {0};        // 8 + '\0'
+        char encuesta_id[7] = {0};      // 6 + '\0'
+        char pregunta_id[9] = {0};      // 8 + '\0'
+        char respuesta_id[13] = {0};    // 12 + '\0'
+        char encuestador_id[5] = {0};   // 4 + '\0'
+        char enc_resp_id[13] = {0};     // 12 + '\0'
 
         strncpy(encuesta_id, linea, 6);
         strncpy(pregunta_id, linea + 6, 8);
@@ -1180,17 +1195,18 @@ void extraer_arbol_csv(struct arbol_respondidas **A, const char *Encuestas_Respo
         strncpy(str_fecha, linea + 26, 8);
         strncpy(encuestador_id, linea + 34, 4);
         strncpy(enc_resp_id, linea + 38, 12);
-
+        
         nuevo->Encuesta_Id = atoi(encuesta_id);
         nuevo->Pregunta_Id = atoi(pregunta_id);
         nuevo->Respuesta_Id = atoll(respuesta_id);
-        int fecha_num = atoi(str_fecha);
-        nuevo->Encuestador_id = atoi(encuestador_id);
-        nuevo->EncuestaRespondida_Id = atoll(enc_resp_id);
 
+        int fecha_num = atoi(str_fecha);
         nuevo->Anio = fecha_num / 10000;
         nuevo->Encuesta_Mes = (fecha_num / 100) % 100;
         nuevo->dia = fecha_num % 100;
+
+        nuevo->Encuestador_id = atoi(encuestador_id);
+        nuevo->EncuestaRespondida_Id = atoll(enc_resp_id);
 
         nuevo->izq = NULL;
         nuevo->der = NULL;
@@ -1200,6 +1216,7 @@ void extraer_arbol_csv(struct arbol_respondidas **A, const char *Encuestas_Respo
 
     fclose(archivo);
 }
+
 
 void verificarPonderacionPreguntas(struct lPregunta **L,struct lRespuesta **L2) {
 	struct lPregunta *r=NULL; //puntero para recorrer la lista
