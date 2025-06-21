@@ -225,21 +225,21 @@ int main(){
     //funcion system para permitir mas caracteres y caracteres especiales
     system("chcp 65001");
     colorMenu();
-	int apagado=0;
-	char w=1;
-    int select=1,tam=15;
+    int apagado=0;
+    char w=1;
+    int select=1,tam=16;
     printf("verificando ponderacion de preguntas...\n");
     verificarPonderacionPreguntas(&LP,&L2);
     getch();
-	while(!apagado){
-		system("cls");
-		printf("<<<<TP integrador>>>>\n");
+    while(!apagado){
+        system("cls");
+        printf("<<<<TP integrador>>>>\n");
         letraR();
         printf("---------------------\n");
         colorMenu();
         //verifica que las preguntas tengan una ponderacion correcta, si no la tienen se eliminan
         //menu visual para seleccionar una opcion
-		if(select==1){
+        if(select==1){
             printf("\n>> procesar encuesta");
         }else
             printf("\n   procesar encuesta");
@@ -314,6 +314,10 @@ int main(){
         }else
             printf("\n   salir");
 
+        if(select==16){
+            printf("\n>> verificar ponderacion de preguntas");
+        }else
+            printf("\n   verificar ponderacion de preguntas");
 
         w=getch();
         if(w=='w' || w==72 )
@@ -386,10 +390,10 @@ int main(){
                 getch();
             }
             if(select==11){
-			    system("cls");
-			    MostrarEncuestasRespondidasCompletas(A, LP, L2);
-			    getch();
-			}
+                system("cls");
+                MostrarEncuestasRespondidasCompletas(A, LP, L2);
+                getch();
+            }
             if(select==12){
                 system("cls");
                 printf("Ingrese ID de encuesta a modificar: ");
@@ -414,8 +418,13 @@ int main(){
             if(select==15){
                 apagado++;
             }
+            if(select==16){
+                system("cls");
+                verificarPonderacionPreguntas(&LP,&L2);
+                getch();
+            }
         }
-	}
+    }
     //carga las respuestas en el arch_respuestas
     cargar_respuestas_csv(L2);
     cargar_preguntas_csv(LP);
